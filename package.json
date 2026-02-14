@@ -1,0 +1,17 @@
+{
+  "name": "aaa-appointment-bot",
+  "version": "1.0.0",
+  "description": "AI Appointment Setter Bot for Coaches & Consultants",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.72.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "nodemailer": "^8.0.1"
+  }
+}
