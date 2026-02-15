@@ -5,9 +5,12 @@ const Anthropic = require('@anthropic-ai/sdk').default;
 const path = require('path');
 const nodemailer = require('nodemailer');
 
-// Email transporter setup
+// Email transporter setup with explicit SSL settings
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true, // SSL
+  connectionTimeout: 10000, // 10 second timeout
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS  // Use App Password for Gmail
