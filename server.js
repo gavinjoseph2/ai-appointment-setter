@@ -183,10 +183,9 @@ async function generateBookingLink(name, email, leadSummary) {
   
   const bookingUrl = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
   
-  // Send email notification to coach
+  // Send email notification to coach (fire-and-forget, don't block response)
   if (process.env.EMAIL_USER && process.env.COACH_EMAIL) {
-    try {
-      await transporter.sendMail({
+    transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: process.env.COACH_EMAIL,
         subject: `🎯 New Lead: ${name} is booking a call!`,
@@ -206,12 +205,12 @@ async function generateBookingLink(name, email, leadSummary) {
             </p>
           </div>
         `
+      }).then(() => {
+        console.log('📧 Lead notification sent to coach');
+      }).catch(emailError => {
+        console.error('Email error:', emailError);
+        // Don't fail the booking if email fails
       });
-      console.log('📧 Lead notification sent to coach');
-    } catch (emailError) {
-      console.error('Email error:', emailError);
-      // Don't fail the booking if email fails
-    }
   }
   
   return {
