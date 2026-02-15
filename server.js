@@ -7,9 +7,18 @@ const { Resend } = require('resend');
 
 // Email setup with Resend (works reliably on cloud platforms)
 const resendApiKey = process.env.RESEND_API_KEY;
+console.log('🔑 RESEND_API_KEY present:', !!resendApiKey);
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 if (resend) {
-  console.log('✅ Resend email configured with key:', resendApiKey.substring(0, 10) + '...');
+  console.log('✅ Resend configured, sending test email...');
+  // Send test email on startup
+  resend.emails.send({
+    from: 'AI Appointment Bot <onboarding@resend.dev>',
+    to: 'gavinjoseph2@gmail.com',
+    subject: '🚀 Railway Startup Test',
+    html: '<p>If you see this, Resend works from Railway!</p>'
+  }).then(r => console.log('✅ Startup test email sent:', r.data?.id || r.error))
+    .catch(e => console.error('❌ Startup email failed:', e.message));
 } else {
   console.log('⚠️  No RESEND_API_KEY - email notifications disabled');
 }
