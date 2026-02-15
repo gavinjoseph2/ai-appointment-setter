@@ -5,15 +5,21 @@ const Anthropic = require('@anthropic-ai/sdk').default;
 const path = require('path');
 const nodemailer = require('nodemailer');
 
-// Email transporter setup with explicit SSL settings
+// Email transporter setup with STARTTLS (more compatible with cloud platforms)
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, // SSL
-  connectionTimeout: 10000, // 10 second timeout
+  port: 587,
+  secure: false, // Use STARTTLS
+  requireTLS: true,
+  connectionTimeout: 15000, // 15 second timeout
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS  // Use App Password for Gmail
+  },
+  tls: {
+    rejectUnauthorized: false // Allow self-signed certs
   }
 });
 
