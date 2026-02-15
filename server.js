@@ -3,25 +3,10 @@ const express = require('express');
 const cors = require('cors');
 const Anthropic = require('@anthropic-ai/sdk').default;
 const path = require('path');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-// Email transporter setup with STARTTLS (more compatible with cloud platforms)
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, // Use STARTTLS
-  requireTLS: true,
-  connectionTimeout: 15000, // 15 second timeout
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS  // Use App Password for Gmail
-  },
-  tls: {
-    rejectUnauthorized: false // Allow self-signed certs
-  }
-});
+// Email setup with Resend (works reliably on cloud platforms)
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 const app = express();
 app.use(cors());
@@ -198,33 +183,33 @@ async function generateBookingLink(name, email, leadSummary) {
   const bookingUrl = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
   
   // Send email notification to coach (fire-and-forget, don't block response)
-  if (process.env.EMAIL_USER && process.env.COACH_EMAIL) {
-    transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: process.env.COACH_EMAIL,
-        subject: `🎯 New Lead: ${cleanName} is booking a call!`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #2563eb;">New Lead Alert! 🎉</h2>
-            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <p><strong>Name:</strong> ${cleanName}</p>
-              <p><strong>Email:</strong> ${cleanEmail}</p>
-            </div>
-            <h3 style="color: #1f2937;">Lead Summary:</h3>
-            <div style="background: #fef3c7; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b;">
-              <p style="margin: 0; white-space: pre-wrap;">${leadSummary || 'No summary provided'}</p>
-            </div>
-            <p style="color: #6b7280; margin-top: 20px; font-size: 14px;">
-              They're completing their booking now. Check your Calendly for the confirmed time.
-            </p>
+  if (resend && process.env.COACH_EMAIL) {
+    resend.emails.send({
+      from: 'AI Appointment Bot <onboarding@resend.dev>',
+      to: process.env.COACH_EMAIL,
+      subject: `🎯 New Lead: ${cleanName} is booking a call!`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2563eb;">New Lead Alert! 🎉</h2>
+          <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p><strong>Name:</strong> ${cleanName}</p>
+            <p><strong>Email:</strong> ${cleanEmail}</p>
           </div>
-        `
-      }).then(() => {
-        console.log('📧 Lead notification sent to coach');
-      }).catch(emailError => {
-        console.error('Email error:', emailError);
-        // Don't fail the booking if email fails
-      });
+          <h3 style="color: #1f2937;">Lead Summary:</h3>
+          <div style="background: #fef3c7; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+            <p style="margin: 0; white-space: pre-wrap;">${leadSummary || 'No summary provided'}</p>
+          </div>
+          <p style="color: #6b7280; margin-top: 20px; font-size: 14px;">
+            They're completing their booking now. Check your Calendly for the confirmed time.
+          </p>
+        </div>
+      `
+    }).then(() => {
+      console.log('📧 Lead notification sent to coach');
+    }).catch(emailError => {
+      console.error('Email error:', emailError);
+      // Don't fail the booking if email fails
+    });
   }
   
   return {
