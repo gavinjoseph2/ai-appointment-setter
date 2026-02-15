@@ -180,9 +180,14 @@ async function generateBookingLink(name, email, leadSummary) {
   // Calendly doesn't support direct API booking on free tier
   // Instead, we generate a prefilled scheduling link
   const baseUrl = cachedSchedulingUrl || process.env.CALENDLY_SCHEDULING_URL || 'https://calendly.com/gavinjoseph2/30min';
+  
+  // Sanitize inputs - remove markdown formatting (asterisks, etc)
+  const cleanName = name ? name.replace(/\*+/g, '').trim() : '';
+  const cleanEmail = email ? email.replace(/\*+/g, '').trim() : '';
+  
   const params = new URLSearchParams();
-  if (name) params.set('name', name);
-  if (email) params.set('email', email);
+  if (cleanName) params.set('name', cleanName);
+  if (cleanEmail) params.set('email', cleanEmail);
   
   const bookingUrl = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
   
@@ -191,13 +196,13 @@ async function generateBookingLink(name, email, leadSummary) {
     transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: process.env.COACH_EMAIL,
-        subject: `🎯 New Lead: ${name} is booking a call!`,
+        subject: `🎯 New Lead: ${cleanName} is booking a call!`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #2563eb;">New Lead Alert! 🎉</h2>
             <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <p><strong>Name:</strong> ${name}</p>
-              <p><strong>Email:</strong> ${email}</p>
+              <p><strong>Name:</strong> ${cleanName}</p>
+              <p><strong>Email:</strong> ${cleanEmail}</p>
             </div>
             <h3 style="color: #1f2937;">Lead Summary:</h3>
             <div style="background: #fef3c7; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b;">
