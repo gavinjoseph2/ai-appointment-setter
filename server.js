@@ -6,9 +6,10 @@ const path = require('path');
 const { Resend } = require('resend');
 
 // Email setup with Resend (works reliably on cloud platforms)
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const resendApiKey = process.env.RESEND_API_KEY;
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
 if (resend) {
-  console.log('✅ Resend email configured');
+  console.log('✅ Resend email configured with key:', resendApiKey.substring(0, 10) + '...');
 } else {
   console.log('⚠️  No RESEND_API_KEY - email notifications disabled');
 }
