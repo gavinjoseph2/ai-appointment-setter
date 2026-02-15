@@ -7,6 +7,11 @@ const { Resend } = require('resend');
 
 // Email setup with Resend (works reliably on cloud platforms)
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+if (resend) {
+  console.log('✅ Resend email configured');
+} else {
+  console.log('⚠️  No RESEND_API_KEY - email notifications disabled');
+}
 
 const app = express();
 app.use(cors());
@@ -183,7 +188,9 @@ async function generateBookingLink(name, email, leadSummary) {
   const bookingUrl = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
   
   // Send email notification to coach (fire-and-forget, don't block response)
+  console.log('📧 Attempting to send lead notification...', { resendConfigured: !!resend, coachEmail: process.env.COACH_EMAIL });
   if (resend && process.env.COACH_EMAIL) {
+    console.log('📧 Sending email via Resend to:', process.env.COACH_EMAIL);
     resend.emails.send({
       from: 'AI Appointment Bot <onboarding@resend.dev>',
       to: process.env.COACH_EMAIL,
