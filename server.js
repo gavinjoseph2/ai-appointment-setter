@@ -211,10 +211,15 @@ async function generateBookingLink(name, email, leadSummary) {
           </p>
         </div>
       `
-    }).then(() => {
-      console.log('📧 Lead notification sent to coach');
+    }).then((response) => {
+      console.log('📧 Resend response:', JSON.stringify(response));
+      if (response.error) {
+        console.error('📧 Resend error:', response.error);
+      } else {
+        console.log('📧 Lead notification sent! ID:', response.data?.id);
+      }
     }).catch(emailError => {
-      console.error('Email error:', emailError);
+      console.error('📧 Email error:', emailError.message || emailError);
       // Don't fail the booking if email fails
     });
   }
