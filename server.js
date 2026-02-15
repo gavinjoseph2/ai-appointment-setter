@@ -259,12 +259,15 @@ const tools = [
 
 // Handle tool calls
 async function handleToolCall(toolName, toolInput) {
+  console.log('🔧 Tool called:', toolName, JSON.stringify(toolInput));
+  
   if (toolName === 'get_availability') {
     const availability = await getCalendlyAvailability();
     return JSON.stringify(availability);
   }
   
   if (toolName === 'generate_booking_link') {
+    console.log('📋 Generating booking link with summary:', toolInput.leadSummary);
     const result = await generateBookingLink(
       toolInput.name,
       toolInput.email,
