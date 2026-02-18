@@ -3,24 +3,15 @@ const express = require('express');
 const cors = require('cors');
 const Anthropic = require('@anthropic-ai/sdk').default;
 const path = require('path');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-// Email setup with Gmail SMTP (guaranteed delivery)
-let emailTransporter = null;
-if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
-  emailTransporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    dnsLookupFamily: 4, // Force IPv4 (Railway has IPv6 issues)
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD
-    }
-  });
-  console.log('✅ Gmail SMTP configured');
+// Email setup with Resend
+const resendApiKey = process.env.RESEND_API_KEY;
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
+if (resend) {
+  console.log('✅ Resend email configured');
 } else {
-  console.log('⚠️  No Gmail credentials - email notifications disabled');
+  console.log('⚠️  No RESEND_API_KEY - email notifications disabled');
 }
 
 const app = express();
@@ -197,12 +188,12 @@ async function generateBookingLink(name, email, leadSummary) {
   
   const bookingUrl = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
   
-  // Send email notification to coach via Gmail SMTP (fire-and-forget, don't block response)
-  console.log('📧 Attempting to send lead notification...', { gmailConfigured: !!emailTransporter, coachEmail: process.env.COACH_EMAIL });
-  if (emailTransporter && process.env.COACH_EMAIL) {
-    console.log('📧 Sending email via Gmail SMTP to:', process.env.COACH_EMAIL);
-    emailTransporter.sendMail({
-      from: `"AI Appointment Bot" <${process.env.GMAIL_USER}>`,
+  // Send email notification to coach via Resend (fire-and-forget, don't block response)
+  console.log('📧 Attempting to send lead notification...', { resendConfigured: !!resend, coachEmail: process.env.COACH_EMAIL });
+  if (resend && process.env.COACH_EMAIL) {
+    console.log('📧 Sending email via Resend to:', process.env.COACH_EMAIL);
+    resend.emails.send({
+      from: 'AI Appointment Bot <bot@lead-setter.com>',
       to: process.env.COACH_EMAIL,
       subject: `🎯 New Lead: ${cleanName} is booking a call!`,
       html: `
@@ -221,9 +212,13 @@ async function generateBookingLink(name, email, leadSummary) {
           </p>
         </div>
       `
-    }).then((info) => {
-      console.log('📧 Gmail response:', info.response);
-      console.log('📧 Lead notification sent! Message ID:', info.messageId);
+    }).then((response) => {
+      console.log('📧 Resend response:', JSON.stringify(response));
+      if (response.error) {
+        console.error('📧 Resend error:', response.error);
+      } else {
+        console.log('📧 Lead notification sent! ID:', response.data?.id);
+      }
     }).catch(emailError => {
       console.error('📧 Email error:', emailError.message || emailError);
       // Don't fail the booking if email fails
