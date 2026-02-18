@@ -10,9 +10,9 @@ let emailTransporter = null;
 if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
   emailTransporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    family: 4, // Force IPv4 (Railway has IPv6 issues)
+    port: 465,
+    secure: true,
+    dnsLookupFamily: 4, // Force IPv4 (Railway has IPv6 issues)
     auth: {
       user: process.env.GMAIL_USER,
       pass: process.env.GMAIL_APP_PASSWORD
