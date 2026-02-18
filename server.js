@@ -193,7 +193,7 @@ async function generateBookingLink(name, email, leadSummary) {
   if (resend && process.env.COACH_EMAIL) {
     console.log('📧 Sending email via Resend to:', process.env.COACH_EMAIL);
     resend.emails.send({
-      from: 'AI Appointment Bot <bot@send.lead-setter.com>',
+      from: 'AI Appointment Bot <bot@lead-setter.com>',
       to: process.env.COACH_EMAIL,
       subject: `🎯 New Lead: ${cleanName} is booking a call!`,
       html: `
