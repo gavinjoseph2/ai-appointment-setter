@@ -81,41 +81,35 @@ async function initCalendly() {
 // System prompt for the appointment setter
 const SYSTEM_PROMPT = `You are ${process.env.ASSISTANT_NAME || 'Alex'}, a friendly and professional appointment scheduling assistant for ${process.env.BUSINESS_NAME || 'our coaching practice'}.
 
-Your goal is to:
-1. Warmly greet visitors
-2. Briefly qualify them with 2-3 questions
-3. Help them book a free consultation call
+Your goal is to help visitors book a free consultation call as quickly and smoothly as possible.
 
-CONVERSATION FLOW:
-1. GREETING: Welcome them warmly, ask what brought them here today
-2. QUALIFY: Ask about their main challenge/goal, and what they're hoping to achieve
-3. BOOK: Once qualified, check availability and ask what day/time works for them
-4. COLLECT: Get their name, email, AND preferred time in one step if possible
-5. CONFIRM: Book it directly and give them a simple confirmation link
+CONVERSATION FLOW (KEEP IT FAST):
+1. GREET + OFFER BOOKING: "Hey! Want to book a free consultation? I have [3 times]. Which works? Just drop your name and email too!"
+2. If they share what they're looking for first, acknowledge briefly then offer times
+3. BOOK immediately once you have time + name + email
 
 RULES:
-- Keep responses SHORT (2-3 sentences max)
-- Be warm but professional
-- Don't be pushy
-- If they're not a good fit or not ready, be gracious
+- Keep responses SHORT (1-2 sentences)
+- MINIMIZE FRICTION - don't ask unnecessary questions
+- Only ask ONE qualifying question max, and make it optional
+- Get time + name + email in ONE exchange if possible
+- Show only 3-4 time options, not a full list
+- Be warm but efficient
 
-BOOKING FLOW (IMPORTANT):
-1. Use get_availability to see available slots
-2. Share a few time options and ask what works for them
-3. Collect their name and email
-4. Once you have name, email, AND their preferred time - use book_appointment
-5. The system will match their time to an available slot and create their booking link
-6. Give them the confirmation link - it will have their date pre-selected for easy booking
+BOOKING FLOW:
+1. Use get_availability (shows only top 3-4 slots)
+2. Present times AND ask for name/email in the SAME message: "I have Monday 2pm, Tuesday 11am, or Wednesday 3pm. Which works? Just need your name and email to lock it in!"
+3. User responds with time + info → immediately call book_appointment
+4. Done! Give them the confirmation link
 
-EXAMPLE:
-User: "Tuesday at 2pm works"
-You: "Great! Just need your name and email to lock that in."
-User: "John Smith, john@email.com"
--> Call book_appointment with name="John Smith", email="john@email.com", preferredTime="Tuesday at 2pm", leadSummary="..."
+EXAMPLE CONVERSATION:
+Bot: "Hey! 👋 Want to book a free consultation with Coach? I have Monday 2pm, Tuesday 11am, or Wednesday 3pm open. Which works best? Just drop your name and email and I'll lock it in!"
+User: "Tuesday 11am works. I'm John Smith, john@email.com"
+Bot: [calls book_appointment] "Perfect! You're all set for Tuesday at 11am. Just confirm here: [link]. See you then! 🎉"
 
-The booking link will have their selected date pre-loaded so they just confirm - no searching for times!
+That's it - 2 messages to book. No lengthy qualification. Get them booked!
 
-Available times are typically Monday-Friday, 11am-5pm EST.`;
+Available times: Monday-Friday, 11am-5pm EST.`;
 
 // Calendly API functions
 async function getCalendlyAvailability() {
@@ -171,15 +165,21 @@ async function getCalendlyAvailability() {
         slotsByDay[dayKey].push(time);
       });
       
-      const daySummaries = Object.entries(slotsByDay).slice(0, 5).map(([day, times]) => {
-        return `${day}: ${times.slice(0, 4).join(', ')}${times.length > 4 ? '...' : ''}`;
-      });
+      // Pick just 3-4 best slots (spread across different days)
+      const bestSlots = [];
+      const usedDays = new Set();
+      for (const slot of cachedAvailableSlots) {
+        const day = new Date(slot.iso).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'America/New_York' });
+        if (!usedDays.has(day) && bestSlots.length < 4) {
+          bestSlots.push(slot.shortTime);
+          usedDays.add(day);
+        }
+      }
       
       return { 
         available: true, 
-        summary: daySummaries.join('\n'),
-        totalSlots: data.collection.length,
-        message: `I have ${data.collection.length} slots available over the next few days. Here are some options:\n${daySummaries.join('\n')}\n\nWhat day/time works best for you?`
+        topSlots: bestSlots,
+        message: `I have ${bestSlots.join(', ')} open. Which works? Just drop your name and email and I'll lock it in!`
       };
     }
     console.log('Calendly response:', JSON.stringify(data));

@@ -1,3 +1,4 @@
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -86,6 +87,42 @@ app.post('/api/leads/:email/status', (req, res) => {
   const { status, notes } = req.body;
   const statuses = loadLeadStatuses();
   statuses[email] = { status, notes, updatedAt: new Date().toISOString() };
+  saveLeadStatuses(statuses);
+  res.json({ ok: true });
+});
+
+// API: Send quick email to lead
+app.post('/api/leads/:email/send', async (req, res) => {
+  const { email } = req.params;
+  const { subject, message } = req.body;
+  
+  try {
+    const { Resend } = require('resend');
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    
+    await resend.emails.send({
+      from: 'Gavin from LeadSetter <gavin@lead-setter.com>',
+      reply_to: 'gavinjoseph2@gmail.com',
+      to: [email],
+      subject: subject || 'Following up',
+      html: message.replace(/\n/g, '<br>')
+    });
+    
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API: Mark as replied (for manual marking)
+app.post('/api/leads/:email/replied', (req, res) => {
+  const { email } = req.params;
+  const statuses = loadLeadStatuses();
+  statuses[email] = { 
+    ...statuses[email], 
+    status: 'replied', 
+    repliedAt: new Date().toISOString() 
+  };
   saveLeadStatuses(statuses);
   res.json({ ok: true });
 });
@@ -209,6 +246,60 @@ app.get('/', (req, res) => {
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: #1a1a2e; }
     ::-webkit-scrollbar-thumb { background: #667eea; border-radius: 4px; }
+    
+    /* Action buttons */
+    .action-btn {
+      background: rgba(102, 126, 234, 0.2);
+      border: none;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 5px;
+      transition: all 0.2s;
+    }
+    .action-btn:hover { background: rgba(102, 126, 234, 0.4); transform: scale(1.1); }
+    .reply-btn:hover { background: rgba(16, 185, 129, 0.4); }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: #1a1a2e;
+      padding: 30px;
+      border-radius: 16px;
+      width: 500px;
+      max-width: 90%;
+      border: 1px solid rgba(102, 126, 234, 0.3);
+    }
+    .modal h3 { margin-bottom: 20px; color: #e2e8f0; }
+    .modal input, .modal textarea {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      background: rgba(42, 42, 62, 0.8);
+      color: #e2e8f0;
+      border: 1px solid rgba(102, 126, 234, 0.3);
+    }
+    .modal textarea { min-height: 150px; resize: vertical; }
+    .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; }
+    .modal-btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .modal-btn.send { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .modal-btn.cancel { background: rgba(42, 42, 62, 0.8); color: #8892b0; }
   </style>
 </head>
 <body>
@@ -227,6 +318,27 @@ app.get('/', (req, res) => {
     <button data-filter="not_interested">Not Interested</button>
   </div>
   
+  <!-- Email Modal -->
+  <div class="modal" id="emailModal">
+    <div class="modal-content">
+      <h3>📧 Send Email to <span id="modalRecipient"></span></h3>
+      <input type="text" id="emailSubject" placeholder="Subject" value="Quick follow up">
+      <textarea id="emailBody" placeholder="Your message...">Hey!
+
+Just wanted to follow up on my previous email about the AI appointment setter.
+
+Did you get a chance to check out the demo?
+
+Let me know if you have any questions!
+
+Gavin</textarea>
+      <div class="modal-buttons">
+        <button class="modal-btn cancel" onclick="closeEmailModal()">Cancel</button>
+        <button class="modal-btn send" onclick="sendEmail()">Send Email</button>
+      </div>
+    </div>
+  </div>
+
   <table>
     <thead>
       <tr>
@@ -238,6 +350,7 @@ app.get('/', (req, res) => {
         <th>Email Status</th>
         <th>Lead Status</th>
         <th>Notes</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody id="leads"></tbody>
@@ -294,6 +407,10 @@ app.get('/', (req, res) => {
             </select>
           </td>
           <td><input type="text" value="\${l.notes || ''}" onchange="updateNotes('\${l.email}', this.value)" placeholder="Add notes..."></td>
+          <td>
+            <button class="action-btn email-btn" onclick="openEmailModal('\${l.email}', '\${l.name}')">📧</button>
+            <button class="action-btn reply-btn" onclick="markReplied('\${l.email}')" title="Mark as replied">↩️</button>
+          </td>
         </tr>
       \`).join('');
     }
@@ -326,6 +443,44 @@ app.get('/', (req, res) => {
       });
     });
 
+    let currentEmailTarget = '';
+    
+    function openEmailModal(email, name) {
+      currentEmailTarget = email;
+      document.getElementById('modalRecipient').textContent = name || email;
+      document.getElementById('emailModal').classList.add('active');
+    }
+    
+    function closeEmailModal() {
+      document.getElementById('emailModal').classList.remove('active');
+    }
+    
+    async function sendEmail() {
+      const subject = document.getElementById('emailSubject').value;
+      const message = document.getElementById('emailBody').value;
+      
+      try {
+        const res = await fetch('/api/leads/' + encodeURIComponent(currentEmailTarget) + '/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subject, message })
+        });
+        if (res.ok) {
+          alert('Email sent!');
+          closeEmailModal();
+        } else {
+          alert('Failed to send email');
+        }
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    }
+    
+    async function markReplied(email) {
+      await fetch('/api/leads/' + encodeURIComponent(email) + '/replied', { method: 'POST' });
+      loadData();
+    }
+    
     loadData();
     // Auto-refresh every 30 seconds
     setInterval(loadData, 30000);
