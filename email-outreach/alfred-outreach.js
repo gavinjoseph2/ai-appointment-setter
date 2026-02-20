@@ -1,0 +1,233 @@
+/**
+ * Alfred's Automated Email Outreach
+ * Runs autonomously via cron - sends initial emails + follow-ups
+ */
+
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+const { Resend } = require('resend');
+const fs = require('fs');
+const path = require('path');
+
+// Config
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const FROM_EMAIL = 'gavin@lead-setter.com';
+const FROM_NAME = 'Gavin from LeadSetter';
+const GAVIN_EMAIL = 'gavinjoseph2@gmail.com';
+const DAILY_LIMIT = 20; // Max emails per run
+const FOLLOWUP_1_DAYS = 3;
+const FOLLOWUP_2_DAYS = 7;
+
+// Email templates
+const templates = {
+  initial: (name, niche) => ({
+    subject: `Quick question about ${niche || 'your coaching business'}`,
+    html: `
+      <p>Hey ${name},</p>
+      
+      <p>I came across your Instagram and really liked what you're doing with ${niche || 'coaching'}.</p>
+      
+      <p>Quick question - how are you currently handling lead qualification and booking calls?</p>
+      
+      <p>We built an AI appointment setter that qualifies leads 24/7 and books them directly into your calendar. It's already working for coaches in your space.</p>
+      
+      <p>📹 <a href="https://www.loom.com/share/86489f9c9db04641baa4c12c02a1b944">Watch the 2-min demo</a> | 💬 <a href="https://lead-setter.com">Try it live</a></p>
+      
+      <p>Would love to set you up with a free trial if you're interested. No strings attached - just looking for feedback from coaches doing great work.</p>
+      
+      <p>Best,<br>Gavin<br>LeadSetter</p>
+      
+      <p><strong>Reply to this email or reach me at:</strong> gavinjoseph2@gmail.com</p>
+    `
+  }),
+  
+  followUp1: (name) => ({
+    subject: `Re: Quick question`,
+    html: `
+      <p>Hey ${name},</p>
+      
+      <p>Just following up on my last email about the AI appointment setter.</p>
+      
+      <p>I know you're busy, so here's the short version: It qualifies leads and books calls automatically. Free to try, takes 5 min to set up.</p>
+      
+      <p>Worth a quick look? 📹 <a href="https://www.loom.com/share/86489f9c9db04641baa4c12c02a1b944">2-min video</a> | 💬 <a href="https://lead-setter.com">Try it live</a></p>
+      
+      <p>Gavin</p>
+      
+      <p><strong>Reply or email me:</strong> gavinjoseph2@gmail.com</p>
+    `
+  }),
+  
+  followUp2: (name) => ({
+    subject: `Last one from me`,
+    html: `
+      <p>Hey ${name},</p>
+      
+      <p>Last email from me - don't want to be annoying!</p>
+      
+      <p>If timing isn't right, totally get it. But if you're ever curious about automating lead qualification, the offer stands.</p>
+      
+      <p>📹 <a href="https://www.loom.com/share/86489f9c9db04641baa4c12c02a1b944">Watch demo</a> | 💬 <a href="https://lead-setter.com">Try it</a></p>
+      
+      <p>Wishing you success 🙏</p>
+      
+      <p>Gavin<br>LeadSetter</p>
+      
+      <p><strong>Email me:</strong> gavinjoseph2@gmail.com</p>
+    `
+  })
+};
+
+// Tracking file
+const TRACKING_FILE = path.join(__dirname, 'outreach-tracking.json');
+
+function loadTracking() {
+  try {
+    return JSON.parse(fs.readFileSync(TRACKING_FILE, 'utf8'));
+  } catch {
+    return { 
+      prospects: {}, // email -> { initial: date, followUp1: date, followUp2: date }
+      stats: { sent: 0, bounced: 0, replies: 0 }
+    };
+  }
+}
+
+function saveTracking(data) {
+  fs.writeFileSync(TRACKING_FILE, JSON.stringify(data, null, 2));
+}
+
+// Parse prospects CSV
+function parseProspects() {
+  const csvPath = path.join(__dirname, '..', 'prospects', 'coaches-list.csv');
+  const content = fs.readFileSync(csvPath, 'utf8');
+  const lines = content.trim().split('\n');
+  const headers = lines[0].split(',');
+  
+  return lines.slice(1).map(line => {
+    const values = line.split(',');
+    const obj = {};
+    headers.forEach((h, i) => obj[h.trim()] = values[i]?.trim());
+    return obj;
+  }).filter(p => p.email && !p.email.includes('gmail.com')); // Skip generic gmails
+}
+
+// Send email
+async function sendEmail(resend, to, template, type) {
+  try {
+    const result = await resend.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      reply_to: GAVIN_EMAIL,
+      to: [to],
+      subject: template.subject,
+      html: template.html
+    });
+    console.log(`✅ [${type}] Sent to ${to}`);
+    return { success: true, id: result.id };
+  } catch (error) {
+    console.error(`❌ [${type}] Failed ${to}:`, error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+// Notify Gavin of activity
+async function notifyGavin(resend, summary) {
+  await resend.emails.send({
+    from: `LeadSetter Reports <gavin@lead-setter.com>`,
+    to: [GAVIN_EMAIL],
+    subject: `📧 Outreach Report - ${new Date().toLocaleDateString()}`,
+    html: `
+      <h2>LeadSetter Outreach Report</h2>
+      <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+      <h3>Today's Activity:</h3>
+      <ul>
+        <li>Initial emails sent: ${summary.initial}</li>
+        <li>Follow-up 1 sent: ${summary.followUp1}</li>
+        <li>Follow-up 2 sent: ${summary.followUp2}</li>
+        <li>Skipped (already done): ${summary.skipped}</li>
+      </ul>
+      <p><em>Check Resend dashboard for delivery status. Replies go to gavinjoseph2@gmail.com</em></p>
+    `
+  });
+}
+
+// Calculate days since date
+function daysSince(dateStr) {
+  if (!dateStr) return Infinity;
+  const then = new Date(dateStr);
+  const now = new Date();
+  return Math.floor((now - then) / (1000 * 60 * 60 * 24));
+}
+
+// Delay helper
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+// Main function
+async function main() {
+  console.log(`\n🤖 Alfred's Automated Outreach`);
+  console.log(`Time: ${new Date().toLocaleString()}\n`);
+  
+  const resend = new Resend(RESEND_API_KEY);
+  const prospects = parseProspects();
+  const tracking = loadTracking();
+  
+  const summary = { initial: 0, followUp1: 0, followUp2: 0, skipped: 0 };
+  let emailsSent = 0;
+  
+  for (const prospect of prospects) {
+    if (emailsSent >= DAILY_LIMIT) {
+      console.log(`\n⏸️ Daily limit (${DAILY_LIMIT}) reached. Continuing tomorrow.`);
+      break;
+    }
+    
+    const email = prospect.email;
+    const record = tracking.prospects[email] || {};
+    
+    // Determine what to send
+    if (!record.initial) {
+      // Send initial email
+      const template = templates.initial(prospect.name, prospect.niche);
+      const result = await sendEmail(resend, email, template, 'INITIAL');
+      if (result.success) {
+        tracking.prospects[email] = { ...record, initial: new Date().toISOString() };
+        summary.initial++;
+        emailsSent++;
+      }
+    } else if (!record.followUp1 && daysSince(record.initial) >= FOLLOWUP_1_DAYS) {
+      // Send follow-up 1
+      const template = templates.followUp1(prospect.name);
+      const result = await sendEmail(resend, email, template, 'FOLLOW-UP 1');
+      if (result.success) {
+        tracking.prospects[email] = { ...record, followUp1: new Date().toISOString() };
+        summary.followUp1++;
+        emailsSent++;
+      }
+    } else if (!record.followUp2 && record.followUp1 && daysSince(record.followUp1) >= (FOLLOWUP_2_DAYS - FOLLOWUP_1_DAYS)) {
+      // Send follow-up 2
+      const template = templates.followUp2(prospect.name);
+      const result = await sendEmail(resend, email, template, 'FOLLOW-UP 2');
+      if (result.success) {
+        tracking.prospects[email] = { ...record, followUp2: new Date().toISOString() };
+        summary.followUp2++;
+        emailsSent++;
+      }
+    } else {
+      summary.skipped++;
+    }
+    
+    saveTracking(tracking);
+    
+    if (emailsSent > 0 && emailsSent % 5 === 0) {
+      await delay(10000); // 10 sec pause every 5 emails
+    }
+  }
+  
+  // Notify Gavin if any activity
+  if (summary.initial + summary.followUp1 + summary.followUp2 > 0) {
+    await notifyGavin(resend, summary);
+    console.log(`\n📬 Report sent to Gavin`);
+  }
+  
+  console.log(`\n✅ Done! Sent ${emailsSent} emails total.`);
+  console.log(`   Initial: ${summary.initial}, Follow-up 1: ${summary.followUp1}, Follow-up 2: ${summary.followUp2}`);
+}
+
+main().catch(console.error);

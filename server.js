@@ -27,6 +27,7 @@ const conversations = new Map();
 // Cache for Calendly event type (auto-fetched from API key)
 let cachedEventTypeUri = process.env.CALENDLY_EVENT_TYPE_URI || null;
 let cachedSchedulingUrl = process.env.CALENDLY_SCHEDULING_URL || null;
+let cachedAvailableSlots = []; // Store full slot details for direct booking
 
 // Auto-fetch Calendly event type on startup
 async function initCalendly() {
@@ -88,23 +89,31 @@ Your goal is to:
 CONVERSATION FLOW:
 1. GREETING: Welcome them warmly, ask what brought them here today
 2. QUALIFY: Ask about their main challenge/goal, and what they're hoping to achieve
-3. BOOK: Once qualified, offer to book a consultation. Ask for their preferred day/time
-4. COLLECT: Get their name, email, and phone number
-5. CONFIRM: Confirm the booking details
+3. BOOK: Once qualified, check availability and ask what day/time works for them
+4. COLLECT: Get their name, email, AND preferred time in one step if possible
+5. CONFIRM: Book it directly and give them a simple confirmation link
 
 RULES:
 - Keep responses SHORT (2-3 sentences max)
 - Be warm but professional
 - Don't be pushy
 - If they're not a good fit or not ready, be gracious
-- Use get_availability to check available slots
-- Use generate_booking_link when you have their name and email to send them a booking link
 
-BOOKING FLOW:
-1. Check availability with get_availability
-2. Collect their name and email
-3. Generate their personal booking link with generate_booking_link - IMPORTANT: Include a brief summary of what you learned about them (their goal, challenges, any relevant details) in the leadSummary field
-4. Share the link - they'll complete the booking on Calendly
+BOOKING FLOW (IMPORTANT):
+1. Use get_availability to see available slots
+2. Share a few time options and ask what works for them
+3. Collect their name and email
+4. Once you have name, email, AND their preferred time - use book_appointment
+5. The system will match their time to an available slot and create their booking link
+6. Give them the confirmation link - it will have their date pre-selected for easy booking
+
+EXAMPLE:
+User: "Tuesday at 2pm works"
+You: "Great! Just need your name and email to lock that in."
+User: "John Smith, john@email.com"
+-> Call book_appointment with name="John Smith", email="john@email.com", preferredTime="Tuesday at 2pm", leadSummary="..."
+
+The booking link will have their selected date pre-loaded so they just confirm - no searching for times!
 
 Available times are typically Monday-Friday, 11am-5pm EST.`;
 
@@ -112,24 +121,23 @@ Available times are typically Monday-Friday, 11am-5pm EST.`;
 async function getCalendlyAvailability() {
   if (!process.env.CALENDLY_API_KEY || !cachedEventTypeUri) {
     // Return mock data if Calendly not configured
+    cachedAvailableSlots = [
+      { time: "Monday 11:00 AM", iso: "2026-02-23T11:00:00-05:00" },
+      { time: "Monday 2:00 PM", iso: "2026-02-23T14:00:00-05:00" },
+      { time: "Tuesday 11:00 AM", iso: "2026-02-24T11:00:00-05:00" },
+      { time: "Wednesday 3:00 PM", iso: "2026-02-25T15:00:00-05:00" }
+    ];
     return {
       available: true,
-      slots: [
-        { time: "Monday 11:00 AM" },
-        { time: "Monday 2:00 PM" },
-        { time: "Tuesday 11:00 AM" },
-        { time: "Wednesday 3:00 PM" },
-        { time: "Thursday 11:00 AM" },
-        { time: "Friday 1:00 PM" }
-      ]
+      slots: cachedAvailableSlots.map(s => s.time),
+      message: "Available times: Monday 11am or 2pm, Tuesday 11am, Wednesday 3pm"
     };
   }
 
   try {
-    // Calendly requires start_time to be in the future and max 7 days range
     const now = new Date();
-    const startTime = new Date(now.getTime() + 60000).toISOString(); // 1 minute from now
-    const endTime = new Date(now.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString(); // 6 days from now
+    const startTime = new Date(now.getTime() + 60000).toISOString();
+    const endTime = new Date(now.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString();
     
     const url = `https://api.calendly.com/event_type_available_times?event_type=${encodeURIComponent(cachedEventTypeUri)}&start_time=${startTime}&end_time=${endTime}`;
     console.log('Fetching Calendly slots...');
@@ -138,70 +146,145 @@ async function getCalendlyAvailability() {
     });
     const data = await response.json();
     
-    // Transform Calendly response to our format - group by day
     if (data.collection && data.collection.length > 0) {
-      const slotsByDay = {};
-      data.collection.forEach(slot => {
+      // Store full slot details for booking
+      cachedAvailableSlots = data.collection.map(slot => {
         const date = new Date(slot.start_time);
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'America/New_York' });
+        const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' });
+        const time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York' });
+        return {
+          time: `${dayName} ${monthDay} at ${time}`,
+          shortTime: `${dayName} ${time}`,
+          iso: slot.start_time,
+          scheduling_url: slot.scheduling_url
+        };
+      });
+      
+      // Group by day for summary
+      const slotsByDay = {};
+      cachedAvailableSlots.forEach(slot => {
+        const date = new Date(slot.iso);
         const dayKey = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'America/New_York' });
-        if (!slotsByDay[dayKey]) {
-          slotsByDay[dayKey] = [];
-        }
+        if (!slotsByDay[dayKey]) slotsByDay[dayKey] = [];
         const time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York' });
         slotsByDay[dayKey].push(time);
       });
       
-      // Format as readable summary
-      const daySummaries = Object.entries(slotsByDay).map(([day, times]) => {
-        const firstTime = times[0];
-        const lastTime = times[times.length - 1];
-        return `${day}: ${firstTime} - ${lastTime} (${times.length} slots)`;
+      const daySummaries = Object.entries(slotsByDay).slice(0, 5).map(([day, times]) => {
+        return `${day}: ${times.slice(0, 4).join(', ')}${times.length > 4 ? '...' : ''}`;
       });
       
       return { 
         available: true, 
         summary: daySummaries.join('\n'),
-        days: Object.keys(slotsByDay),
-        totalSlots: data.collection.length
+        totalSlots: data.collection.length,
+        message: `I have ${data.collection.length} slots available over the next few days. Here are some options:\n${daySummaries.join('\n')}\n\nWhat day/time works best for you?`
       };
     }
     console.log('Calendly response:', JSON.stringify(data));
-    return { available: false, slots: [], message: 'No available slots found' };
+    return { available: false, message: 'No available slots found this week.' };
   } catch (error) {
     console.error('Calendly availability error:', error);
     return { error: 'Could not fetch availability' };
   }
 }
 
-async function generateBookingLink(name, email, leadSummary) {
-  // Calendly doesn't support direct API booking on free tier
-  // Instead, we generate a prefilled scheduling link
-  const baseUrl = cachedSchedulingUrl || process.env.CALENDLY_SCHEDULING_URL || 'https://calendly.com/gavinjoseph2/30min';
+// Find matching slot from user's preferred time
+function findMatchingSlot(preferredTime) {
+  if (!cachedAvailableSlots.length) return null;
   
-  // Sanitize inputs - remove markdown formatting (asterisks, etc)
+  const searchTerm = preferredTime.toLowerCase();
+  
+  // Try to match day and time
+  for (const slot of cachedAvailableSlots) {
+    const slotLower = slot.time.toLowerCase();
+    const shortLower = slot.shortTime.toLowerCase();
+    
+    // Check various matching patterns
+    if (slotLower.includes(searchTerm) || shortLower.includes(searchTerm)) {
+      return slot;
+    }
+    
+    // Extract day and time parts
+    const dayMatch = searchTerm.match(/(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i);
+    const timeMatch = searchTerm.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+    
+    if (dayMatch && slotLower.includes(dayMatch[1].toLowerCase())) {
+      if (timeMatch) {
+        let hour = parseInt(timeMatch[1]);
+        const isPM = timeMatch[3]?.toLowerCase() === 'pm';
+        const isAM = timeMatch[3]?.toLowerCase() === 'am';
+        
+        // Convert to 24h for comparison
+        if (isPM && hour !== 12) hour += 12;
+        if (isAM && hour === 12) hour = 0;
+        
+        const slotDate = new Date(slot.iso);
+        const slotHour = slotDate.getHours();
+        
+        // Allow 1 hour flexibility
+        if (Math.abs(slotHour - hour) <= 1 || (!isAM && !isPM && (slotHour === hour || slotHour === hour + 12))) {
+          return slot;
+        }
+      } else {
+        // Just day match, return first slot on that day
+        return slot;
+      }
+    }
+  }
+  
+  return null;
+}
+
+async function bookAppointment(name, email, preferredTime, leadSummary) {
   const cleanName = name ? name.replace(/\*+/g, '').trim() : '';
   const cleanEmail = email ? email.replace(/\*+/g, '').trim() : '';
+  
+  // Find matching slot
+  const matchedSlot = findMatchingSlot(preferredTime);
+  
+  if (!matchedSlot) {
+    return {
+      success: false,
+      message: `I couldn't find an available slot matching "${preferredTime}". Let me show you what's available...`,
+      needsRetry: true
+    };
+  }
+  
+  // Build the booking URL with the specific time pre-selected
+  const baseUrl = matchedSlot.scheduling_url || cachedSchedulingUrl || process.env.CALENDLY_SCHEDULING_URL || 'https://calendly.com/gavinjoseph2/30min';
+  
+  // Calendly supports month/date/time params for pre-selection
+  const slotDate = new Date(matchedSlot.iso);
+  const month = slotDate.toISOString().slice(0, 7); // YYYY-MM
+  const date = slotDate.toISOString().slice(0, 10); // YYYY-MM-DD
+  const time = slotDate.toISOString().slice(11, 16); // HH:MM
   
   const params = new URLSearchParams();
   if (cleanName) params.set('name', cleanName);
   if (cleanEmail) params.set('email', cleanEmail);
+  params.set('month', month);
+  params.set('date', date);
+  // Note: Calendly will show this date pre-selected
   
-  const bookingUrl = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
+  const bookingUrl = `${baseUrl}?${params.toString()}`;
   
-  // Send email notification to coach via Resend (fire-and-forget, don't block response)
+  // Send email notification to coach
   console.log('📧 Attempting to send lead notification...', { resendConfigured: !!resend, coachEmail: process.env.COACH_EMAIL });
   if (resend && process.env.COACH_EMAIL) {
     console.log('📧 Sending email via Resend to:', process.env.COACH_EMAIL);
     resend.emails.send({
       from: 'AI Appointment Bot <bot@lead-setter.com>',
       to: process.env.COACH_EMAIL,
-      subject: `🎯 New Lead: ${cleanName} is booking a call!`,
+      subject: `🎯 New Lead: ${cleanName} booking for ${matchedSlot.shortTime}!`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #2563eb;">New Lead Alert! 🎉</h2>
           <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <p><strong>Name:</strong> ${cleanName}</p>
             <p><strong>Email:</strong> ${cleanEmail}</p>
+            <p><strong>Requested Time:</strong> ${matchedSlot.time}</p>
           </div>
           <h3 style="color: #1f2937;">Lead Summary:</h3>
           <div style="background: #fef3c7; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b;">
@@ -221,22 +304,27 @@ async function generateBookingLink(name, email, leadSummary) {
       }
     }).catch(emailError => {
       console.error('📧 Email error:', emailError.message || emailError);
-      // Don't fail the booking if email fails
     });
   }
   
   return {
     success: true,
     booking_url: bookingUrl,
-    message: `Great! Click here to complete your booking: ${bookingUrl}`
+    matched_time: matchedSlot.time,
+    message: `Perfect! I've got you down for ${matchedSlot.time}. Just one quick step - click here to confirm: ${bookingUrl}`
   };
+}
+
+// Keep old function for backwards compatibility
+async function generateBookingLink(name, email, leadSummary) {
+  return bookAppointment(name, email, '', leadSummary);
 }
 
 // Tool definitions for Claude
 const tools = [
   {
     name: "get_availability",
-    description: "Get available appointment slots from Calendly. Call this when the user wants to know what times are available.",
+    description: "Get available appointment slots from Calendly. Call this when the user wants to know what times are available or when starting the booking process.",
     input_schema: {
       type: "object",
       properties: {
@@ -249,16 +337,17 @@ const tools = [
     }
   },
   {
-    name: "generate_booking_link",
-    description: "Generate a Calendly booking link and notify the coach. Call this when you have the client's name and email, and they're ready to book. Always include a summary of what you learned about them.",
+    name: "book_appointment",
+    description: "Book an appointment for the client. Call this when you have their name, email, AND their preferred time. The system will match their preferred time to an available slot and generate a confirmation link.",
     input_schema: {
       type: "object",
       properties: {
         name: { type: "string", description: "Client's full name" },
         email: { type: "string", description: "Client's email address" },
+        preferredTime: { type: "string", description: "The time the client requested, e.g. 'Tuesday at 2pm' or 'Wednesday afternoon'" },
         leadSummary: { type: "string", description: "Brief summary of the lead: their goal, challenges, and any relevant context from the conversation" }
       },
-      required: ["name", "email", "leadSummary"]
+      required: ["name", "email", "preferredTime", "leadSummary"]
     }
   }
 ];
@@ -272,13 +361,20 @@ async function handleToolCall(toolName, toolInput) {
     return JSON.stringify(availability);
   }
   
-  if (toolName === 'generate_booking_link') {
-    console.log('📋 Generating booking link with summary:', toolInput.leadSummary);
-    const result = await generateBookingLink(
+  if (toolName === 'book_appointment') {
+    console.log('📋 Booking appointment:', toolInput.preferredTime, 'for', toolInput.name);
+    const result = await bookAppointment(
       toolInput.name,
       toolInput.email,
+      toolInput.preferredTime,
       toolInput.leadSummary
     );
+    return JSON.stringify(result);
+  }
+  
+  // Legacy support
+  if (toolName === 'generate_booking_link') {
+    const result = await generateBookingLink(toolInput.name, toolInput.email, toolInput.leadSummary);
     return JSON.stringify(result);
   }
   

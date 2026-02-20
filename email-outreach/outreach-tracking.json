@@ -1,0 +1,66 @@
+{
+  "prospects": {
+    "hello@myanichol.com": {
+      "initial": "2026-02-20T02:57:40.103Z"
+    },
+    "hello@dietitiandeanna.com": {
+      "initial": "2026-02-20T02:57:40.191Z"
+    },
+    "hello@cruisingforaliving.com": {
+      "initial": "2026-02-20T02:57:40.273Z"
+    },
+    "hello@briannajohnston.com": {
+      "initial": "2026-02-20T02:57:40.419Z"
+    },
+    "hello@iamsteveharris.com": {
+      "initial": "2026-02-20T02:57:40.493Z"
+    },
+    "hello@jameswedmore.com": {
+      "initial": "2026-02-20T02:57:50.658Z"
+    },
+    "hello@carlabiesinger.com": {
+      "initial": "2026-02-20T02:57:50.797Z"
+    },
+    "hello@healthpreneurgroup.com": {
+      "initial": "2026-02-20T02:57:50.870Z"
+    },
+    "hello@moreclients.com.au": {
+      "initial": "2026-02-20T02:57:51.001Z"
+    },
+    "hello@thesocialista.com.au": {
+      "initial": "2026-02-20T02:57:51.330Z"
+    },
+    "hello@sabrinaphilipp.com": {
+      "initial": "2026-02-20T02:58:01.529Z"
+    },
+    "hello@coachfryer.com": {
+      "initial": "2026-02-20T02:58:01.644Z"
+    },
+    "hello@stephgorton.com": {
+      "initial": "2026-02-20T02:58:01.728Z"
+    },
+    "hello@melindaemerson.com": {
+      "initial": "2026-02-20T02:58:01.914Z"
+    },
+    "hello@jessicajovanovich.com": {
+      "initial": "2026-02-20T02:58:01.998Z"
+    },
+    "hello@rubylee.co": {
+      "initial": "2026-02-20T02:58:12.159Z"
+    },
+    "hello@amandabucci.com": {
+      "initial": "2026-02-20T02:58:12.270Z"
+    },
+    "hello@therisingwolf.com": {
+      "initial": "2026-02-20T02:58:12.350Z"
+    },
+    "hello@thewanderlover.com": {
+      "initial": "2026-02-20T02:58:12.480Z"
+    }
+  },
+  "stats": {
+    "sent": 0,
+    "bounced": 0,
+    "replies": 0
+  }
+}
