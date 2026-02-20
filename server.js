@@ -245,9 +245,12 @@ async function bookAppointment(name, email, preferredTime, leadSummary) {
   const matchedSlot = findMatchingSlot(preferredTime);
   
   if (!matchedSlot) {
+    // Get alternative suggestions
+    const alternatives = cachedAvailableSlots.slice(0, 4).map(s => s.shortTime);
     return {
       success: false,
-      message: `I couldn't find an available slot matching "${preferredTime}". Let me show you what's available...`,
+      message: `Sorry, ${preferredTime} isn't available. Here are some open slots: ${alternatives.join(', ')}. Which of these works for you?`,
+      alternativeSlots: alternatives,
       needsRetry: true
     };
   }

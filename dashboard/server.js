@@ -98,32 +98,117 @@ app.get('/', (req, res) => {
   <title>LeadSetter Dashboard</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f1a; color: white; padding: 20px; }
-    h1 { margin-bottom: 20px; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0f0f1a 100%);
+      background-attachment: fixed;
+      color: #e2e8f0; 
+      padding: 30px; 
+      min-height: 100vh;
+    }
+    h1 { 
+      margin-bottom: 25px; 
+      font-size: 2rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
     .stats { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
-    .stat { background: #1a1a2e; padding: 20px 30px; border-radius: 10px; text-align: center; }
-    .stat-num { font-size: 2rem; font-weight: bold; color: #667eea; }
-    .stat-label { font-size: 0.9rem; color: #888; }
+    .stat { 
+      background: rgba(26, 26, 46, 0.8); 
+      backdrop-filter: blur(10px);
+      padding: 20px 30px; 
+      border-radius: 16px; 
+      text-align: center;
+      border: 1px solid rgba(102, 126, 234, 0.2);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+    }
+    .stat-num { font-size: 2.2rem; font-weight: bold; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .stat-label { font-size: 0.85rem; color: #8892b0; margin-top: 5px; }
     .filters { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
-    .filters button { padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; background: #1a1a2e; color: white; }
-    .filters button.active { background: #667eea; }
-    table { width: 100%; border-collapse: collapse; background: #1a1a2e; border-radius: 10px; overflow: hidden; }
-    th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #2a2a3e; }
-    th { background: #2a2a3e; font-weight: 600; }
-    tr:hover { background: #252538; }
-    .status-badge { padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: 500; }
-    .status-pending { background: #4a4a5a; }
-    .status-sent { background: #3b82f6; }
-    .status-replied { background: #f59e0b; }
-    .status-interested { background: #10b981; }
-    .status-booked { background: #22c55e; }
-    .status-not_interested { background: #ef4444; }
-    select { padding: 5px; border-radius: 5px; background: #2a2a3e; color: white; border: 1px solid #4a4a5a; }
-    .ig-link { color: #667eea; text-decoration: none; }
-    .ig-link:hover { text-decoration: underline; }
-    input[type="text"] { padding: 5px 10px; border-radius: 5px; background: #2a2a3e; color: white; border: 1px solid #4a4a5a; width: 150px; }
-    .email-status { font-size: 0.75rem; color: #888; }
-    .refresh-btn { background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-bottom: 20px; }
+    .filters button { 
+      padding: 10px 18px; 
+      border: none; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      background: rgba(26, 26, 46, 0.8); 
+      color: #8892b0; 
+      font-weight: 500;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+    .filters button:hover { background: rgba(102, 126, 234, 0.2); color: #e2e8f0; }
+    .filters button.active { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+      color: white;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      background: rgba(26, 26, 46, 0.6); 
+      backdrop-filter: blur(10px);
+      border-radius: 16px; 
+      overflow: hidden;
+      border: 1px solid rgba(102, 126, 234, 0.1);
+    }
+    th, td { padding: 14px 18px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    th { background: rgba(42, 42, 62, 0.8); font-weight: 600; color: #a0aec0; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
+    tr { transition: background 0.2s; }
+    tr:hover { background: rgba(102, 126, 234, 0.1); }
+    .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .status-pending { background: rgba(74, 74, 90, 0.5); color: #8892b0; }
+    .status-sent { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+    .status-replied { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .status-interested { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .status-booked { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+    .status-not_interested { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+    select { 
+      padding: 8px 12px; 
+      border-radius: 8px; 
+      background: rgba(42, 42, 62, 0.8); 
+      color: #e2e8f0; 
+      border: 1px solid rgba(102, 126, 234, 0.3);
+      cursor: pointer;
+    }
+    select:focus { outline: none; border-color: #667eea; }
+    .ig-link { color: #818cf8; text-decoration: none; font-weight: 500; }
+    .ig-link:hover { color: #a5b4fc; text-decoration: underline; }
+    input[type="text"] { 
+      padding: 8px 12px; 
+      border-radius: 8px; 
+      background: rgba(42, 42, 62, 0.8); 
+      color: #e2e8f0; 
+      border: 1px solid rgba(102, 126, 234, 0.3); 
+      width: 150px;
+    }
+    input[type="text"]:focus { outline: none; border-color: #667eea; }
+    input[type="text"]::placeholder { color: #4a5568; }
+    .email-status { font-size: 0.7rem; color: #10b981; margin-top: 4px; }
+    .refresh-btn { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+      color: white; 
+      padding: 12px 24px; 
+      border: none; 
+      border-radius: 10px; 
+      cursor: pointer; 
+      margin-bottom: 25px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .refresh-btn:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #1a1a2e; }
+    ::-webkit-scrollbar-thumb { background: #667eea; border-radius: 4px; }
   </style>
 </head>
 <body>
@@ -242,6 +327,8 @@ app.get('/', (req, res) => {
     });
 
     loadData();
+    // Auto-refresh every 30 seconds
+    setInterval(loadData, 30000);
   </script>
 </body>
 </html>`);
