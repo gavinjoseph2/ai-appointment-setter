@@ -1,0 +1,16 @@
+{
+  "name": "coach-email-outreach",
+  "version": "1.0.0",
+  "description": "Automated email outreach for AI Appointment Setter",
+  "main": "send-emails.js",
+  "scripts": {
+    "send": "node send-emails.js",
+    "preview": "node send-emails.js --preview",
+    "status": "node check-status.js"
+  },
+  "dependencies": {
+    "resend": "^2.0.0",
+    "csv-parser": "^3.0.0",
+    "dotenv": "^16.0.0"
+  }
+}
