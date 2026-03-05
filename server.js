@@ -84,15 +84,21 @@ const SYSTEM_PROMPT = `You are ${process.env.ASSISTANT_NAME || 'Alex'}, a friend
 Your goal is to help visitors book a free neuropathy strategy consultation call. First collect 4 quick intake questions, then book them in.
 
 LANGUAGE RULE (VERY IMPORTANT):
-- Your FIRST message must ask: "Do you speak Spanish? (Yes/No)" — always in English first.
+- Your FIRST message must include the welcome greeting AND ask about Spanish.
 - If user says YES to Spanish: switch entirely to Spanish for the rest of the conversation and never switch back to English.
 - If user says NO: continue in English for the entire conversation.
 
+FIRST MESSAGE (exactly):
+"Welcome to Panda Physical Medicine! 🏥 I'm here to help you schedule your free neuropathy strategy consultation. Quick question — do you speak Spanish? (Yes/No)"
+
 CONVERSATION FLOW:
-1. INTAKE (ask ALL 4 questions, one at a time or grouped):
-   Q1: "Do you speak Spanish? (Yes/No)" [if Yes → switch to Spanish from Q2 onward]
+1. INTAKE (ask each question ONE AT A TIME, wait for answer before moving to next):
+   Q1: Spanish language question (in welcome message above) [if Yes → switch to Spanish from Q2 onward]
+   User answers → then ask Q2
    Q2: "Have you been diagnosed with neuropathy before? (Yes/No)"
+   User answers → then ask Q3
    Q3: "Have you found a solution to help your neuropathy? (Yes/No)"
+   User answers → then ask Q4
    Q4: "On a scale of 1-5, how motivated are you to find a solution for your neuropathy?"
 
 2. After all 4 answers collected → get availability and offer 3-4 times
@@ -101,7 +107,8 @@ CONVERSATION FLOW:
 
 RULES:
 - Keep responses SHORT (1-2 sentences max)
-- Ask Q2-Q4 grouped together to save time: "Quick questions before we book: [Q2] / [Q3] / [Q4]"
+- Ask questions ONE AT A TIME - never group them
+- Wait for the user's answer to each question before moving to the next
 - Be warm and conversational
 - Show only 3-4 time options
 - Include all 4 intake answers in the leadSummary when calling book_appointment
@@ -113,10 +120,15 @@ BOOKING FLOW:
 4. Done! Give them the confirmation link
 
 EXAMPLE CONVERSATION:
-Bot: "Do you speak Spanish? (Yes/No)"
+Bot: "Welcome to Panda Physical Medicine! 🏥 I'm here to help you schedule your free neuropathy strategy consultation. Quick question — do you speak Spanish? (Yes/No)"
 User: "No"
-Bot: "Quick questions before we book your free consultation: Have you been diagnosed with neuropathy before? / Have you found a solution yet? / On a scale of 1-5, how motivated are you to find one?"
-User: "Yes / No / 5"
+Bot: "Have you been diagnosed with neuropathy before? (Yes/No)"
+User: "Yes"
+Bot: "Have you found a solution to help your neuropathy? (Yes/No)"
+User: "No"
+Bot: "On a scale of 1-5, how motivated are you to find a solution for your neuropathy?"
+User: "5"
+Bot: [calls get_availability] "Great! I have Monday 11am, Tuesday 2pm, or Wednesday 11am open. Which works best? Just need your name and email to lock it in!"
 Bot: "Great! I have Monday 2pm, Tuesday 11am, or Wednesday 3pm open. Which works? Just drop your name and email and I'll lock it in!"
 User: "Tuesday 11am works. I'm John Smith, john@email.com"
 Bot: [calls book_appointment] "Perfect! You're all set for Tuesday at 11am. Just confirm here: [link]. See you then! 🎉"
@@ -133,31 +145,33 @@ async function getCalendlyAvailability() {
     const now = new Date();
     // Find next Mon/Tue/Wed/Thu
     const slots = [];
-    const targetDays = [1, 2, 3, 4]; // Mon-Thu
+    const targetDays = [1, 2, 3, 4, 5]; // Mon-Fri
+    const businessHours = [10, 12, 14, 16]; // 10am, 12pm, 2pm, 4pm
     let d = new Date(now);
     d.setDate(d.getDate() + 1);
-    while (slots.length < 4) {
+    let hourIdx = 0;
+    while (slots.length < 12) { // Get 12 slots across the week
       if (targetDays.includes(d.getDay())) {
-        const hours = slots.length % 2 === 0 ? 11 : 14;
+        const hours = businessHours[hourIdx % businessHours.length];
         const iso = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hours, 0, 0).toISOString();
         const dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
-        const timeStr = hours === 11 ? '11:00 AM' : '2:00 PM';
+        const timeStr = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hours, 0, 0).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
         slots.push({
           time: `${dayName} ${timeStr}`,
           shortTime: `${dayName} ${timeStr}`,
           iso,
           scheduling_url: bookingUrl
         });
+        hourIdx++;
       }
       d.setDate(d.getDate() + 1);
     }
     cachedAvailableSlots = slots;
-    const topSlots = slots.slice(0, 3).map(s => s.shortTime);
     return {
       available: true,
-      topSlots,
+      topSlots: slots.slice(0, 3).map(s => s.shortTime),
       slots: cachedAvailableSlots.map(s => s.time),
-      message: `I have ${topSlots.join(', ')} open. Which works? Just drop your name and email and I'll lock it in!`
+      message: `Great! I have Monday-Friday, 10am-5pm availability. Which time works best for you? Just drop your name and email and I'll lock it in!`
     };
   }
 
@@ -270,7 +284,7 @@ function findMatchingSlot(preferredTime) {
   return null;
 }
 
-async function bookAppointment(name, email, preferredTime, leadSummary) {
+async function bookAppointment(name, email, preferredTime, leadSummary, speaksSpanish, diagnosedBefore, foundSolution, motivationScore) {
   const cleanName = name ? name.replace(/\*+/g, '').trim() : '';
   const cleanEmail = email ? email.replace(/\*+/g, '').trim() : '';
   
@@ -324,10 +338,10 @@ async function bookAppointment(name, email, preferredTime, leadSummary) {
           </div>
           <h3 style="color: #1f2937;">Intake Answers:</h3>
           <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border-left: 4px solid #2563eb; margin-bottom: 16px;">
-            <p style="margin: 6px 0;"><strong>🌐 Speaks Spanish:</strong> ${leadSummary?.includes('Spanish: Yes') ? '✅ Yes' : '❌ No'}</p>
-            <p style="margin: 6px 0;"><strong>🏥 Previously Diagnosed:</strong> ${leadSummary?.includes('Diagnosed: Yes') ? '✅ Yes' : '❌ No'}</p>
-            <p style="margin: 6px 0;"><strong>💊 Found a Solution:</strong> ${leadSummary?.includes('Solution Found: Yes') ? '✅ Yes' : '❌ No'}</p>
-            <p style="margin: 6px 0;"><strong>🔥 Motivation (1-5):</strong> ${(leadSummary?.match(/Motivation: (\d)/) || [])[1] || 'N/A'}</p>
+            <p style="margin: 6px 0;"><strong>🌐 Speaks Spanish:</strong> ${speaksSpanish === 'Yes' ? '✅ Yes' : '❌ No'}</p>
+            <p style="margin: 6px 0;"><strong>🏥 Previously Diagnosed with Neuropathy:</strong> ${diagnosedBefore === 'Yes' ? '✅ Yes' : '❌ No'}</p>
+            <p style="margin: 6px 0;"><strong>💊 Found a Solution:</strong> ${foundSolution === 'Yes' ? '✅ Yes' : '❌ No'}</p>
+            <p style="margin: 6px 0;"><strong>🔥 Motivation (1-5):</strong> ${motivationScore || 'N/A'}</p>
           </div>
           <h3 style="color: #1f2937;">Full Summary:</h3>
           <div style="background: #fef3c7; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b;">
@@ -388,9 +402,13 @@ const tools = [
         name: { type: "string", description: "Client's full name" },
         email: { type: "string", description: "Client's email address" },
         preferredTime: { type: "string", description: "The time the client requested, e.g. 'Tuesday at 2pm' or 'Wednesday afternoon'" },
-        leadSummary: { type: "string", description: "Brief summary of the lead: their goal, challenges, and any relevant context from the conversation" }
+        leadSummary: { type: "string", description: "Brief summary of the lead: their goal, challenges, and any relevant context from the conversation" },
+        speaksSpanish: { type: "string", description: "Does the patient speak Spanish? 'Yes' or 'No'" },
+        diagnosedBefore: { type: "string", description: "Has the patient been diagnosed with neuropathy before? 'Yes' or 'No'" },
+        foundSolution: { type: "string", description: "Has the patient found a solution to their neuropathy? 'Yes' or 'No'" },
+        motivationScore: { type: "string", description: "Patient's motivation score from 1-5 to find a solution" }
       },
-      required: ["name", "email", "preferredTime", "leadSummary"]
+      required: ["name", "email", "preferredTime", "leadSummary", "speaksSpanish", "diagnosedBefore", "foundSolution", "motivationScore"]
     }
   }
 ];
@@ -410,7 +428,11 @@ async function handleToolCall(toolName, toolInput) {
       toolInput.name,
       toolInput.email,
       toolInput.preferredTime,
-      toolInput.leadSummary
+      toolInput.leadSummary,
+      toolInput.speaksSpanish,
+      toolInput.diagnosedBefore,
+      toolInput.foundSolution,
+      toolInput.motivationScore
     );
     return JSON.stringify(result);
   }
