@@ -56,14 +56,17 @@ app.get('/api/leads', (req, res) => {
   
   const leads = prospects.map(p => {
     const emailTrack = tracking.prospects[p.email] || {};
-    const status = statuses[p.email] || { status: 'pending', notes: '' };
+    const savedStatus = statuses[p.email] || {};
+    // Use CSV notes as default, saved notes override if they exist
+    const notes = savedStatus.notes !== undefined ? savedStatus.notes : (p.notes || '');
     return {
       ...p,
       emailSent: !!emailTrack.initial,
       sentDate: emailTrack.initial,
       followUp1: emailTrack.followUp1,
       followUp2: emailTrack.followUp2,
-      ...status
+      status: savedStatus.status || 'pending',
+      notes: notes
     };
   });
   
@@ -125,6 +128,18 @@ app.post('/api/leads/:email/replied', (req, res) => {
   };
   saveLeadStatuses(statuses);
   res.json({ ok: true });
+});
+
+// API: Check Gmail for replies (auto-detection)
+app.post('/api/check-replies', async (req, res) => {
+  try {
+    const { checkForReplies } = require('./check-replies');
+    const result = await checkForReplies();
+    res.json({ ok: true, ...result });
+  } catch (error) {
+    console.error('Reply check error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Dashboard HTML
@@ -224,6 +239,10 @@ app.get('/', (req, res) => {
       border: 1px solid rgba(102, 126, 234, 0.3); 
       width: 150px;
     }
+    .notes-input {
+      width: 180px !important;
+      min-width: 180px;
+    }
     input[type="text"]:focus { outline: none; border-color: #667eea; }
     input[type="text"]::placeholder { color: #4a5568; }
     .email-status { font-size: 0.7rem; color: #10b981; margin-top: 4px; }
@@ -300,11 +319,14 @@ app.get('/', (req, res) => {
     }
     .modal-btn.send { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
     .modal-btn.cancel { background: rgba(42, 42, 62, 0.8); color: #8892b0; }
+    .check-replies-btn { background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; margin-left: 10px; }
+    .check-replies-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   </style>
 </head>
 <body>
   <h1>🚀 LeadSetter Dashboard</h1>
   <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+  <button class="refresh-btn check-replies-btn" onclick="checkReplies()">📬 Check Replies</button>
   
   <div class="stats" id="stats"></div>
   
@@ -406,7 +428,7 @@ Gavin</textarea>
               <option value="not_interested" \${l.status === 'not_interested' ? 'selected' : ''}>Not Interested</option>
             </select>
           </td>
-          <td><input type="text" value="\${l.notes || ''}" onchange="updateNotes('\${l.email}', this.value)" placeholder="Add notes..."></td>
+          <td><input type="text" class="notes-input" value="\${(l.notes || '').replace(/"/g, '&quot;')}" onchange="updateNotes('\${l.email}', this.value)" placeholder="Add notes..."></td>
           <td>
             <button class="action-btn email-btn" onclick="openEmailModal('\${l.email}', '\${l.name}')">📧</button>
             <button class="action-btn reply-btn" onclick="markReplied('\${l.email}')" title="Mark as replied">↩️</button>
@@ -479,6 +501,28 @@ Gavin</textarea>
     async function markReplied(email) {
       await fetch('/api/leads/' + encodeURIComponent(email) + '/replied', { method: 'POST' });
       loadData();
+    }
+    
+    async function checkReplies() {
+      const btn = document.querySelector('.check-replies-btn');
+      btn.disabled = true;
+      btn.textContent = '📬 Checking...';
+      
+      try {
+        const res = await fetch('/api/check-replies', { method: 'POST' });
+        const data = await res.json();
+        if (data.ok) {
+          alert('Found ' + (data.newReplies || 0) + ' new replies!');
+          loadData();
+        } else {
+          alert('Error: ' + (data.error || 'Unknown error'));
+        }
+      } catch (e) {
+        alert('Error checking replies: ' + e.message);
+      }
+      
+      btn.disabled = false;
+      btn.textContent = '📬 Check Replies';
     }
     
     loadData();

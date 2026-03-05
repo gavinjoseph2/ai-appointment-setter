@@ -1,52 +1,84 @@
 {
   "prospects": {
     "hello@myanichol.com": {
-      "initial": "2026-02-20T02:57:40.103Z"
+      "initial": "2026-02-20T02:57:40.103Z",
+      "followUp1": "2026-02-23T15:07:40.892Z",
+      "followUp2": "2026-02-27T16:54:21.146Z"
     },
     "hello@dietitiandeanna.com": {
-      "initial": "2026-02-20T02:57:40.191Z"
+      "initial": "2026-02-20T02:57:40.191Z",
+      "followUp1": "2026-02-23T15:07:41.068Z",
+      "followUp2": "2026-02-27T16:54:21.289Z"
     },
     "hello@cruisingforaliving.com": {
-      "initial": "2026-02-20T02:57:40.273Z"
+      "initial": "2026-02-20T02:57:40.273Z",
+      "followUp1": "2026-02-23T15:07:41.274Z",
+      "followUp2": "2026-02-27T16:54:21.393Z"
     },
     "hello@briannajohnston.com": {
-      "initial": "2026-02-20T02:57:40.419Z"
+      "initial": "2026-02-20T02:57:40.419Z",
+      "followUp1": "2026-02-23T15:07:41.359Z",
+      "followUp2": "2026-02-27T16:54:21.521Z"
     },
     "hello@iamsteveharris.com": {
-      "initial": "2026-02-20T02:57:40.493Z"
+      "initial": "2026-02-20T02:57:40.493Z",
+      "followUp1": "2026-02-23T15:07:51.542Z",
+      "followUp2": "2026-02-27T16:54:21.605Z"
     },
     "hello@jameswedmore.com": {
-      "initial": "2026-02-20T02:57:50.658Z"
+      "initial": "2026-02-20T02:57:50.658Z",
+      "followUp1": "2026-02-23T15:07:51.670Z",
+      "followUp2": "2026-02-27T16:54:31.769Z"
     },
     "hello@carlabiesinger.com": {
-      "initial": "2026-02-20T02:57:50.797Z"
+      "initial": "2026-02-20T02:57:50.797Z",
+      "followUp1": "2026-02-23T15:07:51.750Z",
+      "followUp2": "2026-02-27T16:54:31.938Z"
     },
     "hello@healthpreneurgroup.com": {
-      "initial": "2026-02-20T02:57:50.870Z"
+      "initial": "2026-02-20T02:57:50.870Z",
+      "followUp1": "2026-02-23T15:07:51.889Z",
+      "followUp2": "2026-02-27T16:54:32.037Z"
     },
     "hello@moreclients.com.au": {
-      "initial": "2026-02-20T02:57:51.001Z"
+      "initial": "2026-02-20T02:57:51.001Z",
+      "followUp1": "2026-02-23T15:07:52.094Z",
+      "followUp2": "2026-02-27T16:54:32.150Z"
     },
     "hello@thesocialista.com.au": {
-      "initial": "2026-02-20T02:57:51.330Z"
+      "initial": "2026-02-20T02:57:51.330Z",
+      "followUp1": "2026-02-23T15:08:02.258Z",
+      "followUp2": "2026-02-27T16:54:32.245Z"
     },
     "hello@sabrinaphilipp.com": {
-      "initial": "2026-02-20T02:58:01.529Z"
+      "initial": "2026-02-20T02:58:01.529Z",
+      "followUp1": "2026-02-23T15:08:02.731Z",
+      "followUp2": "2026-02-27T16:54:42.475Z"
     },
     "hello@coachfryer.com": {
-      "initial": "2026-02-20T02:58:01.644Z"
+      "initial": "2026-02-20T02:58:01.644Z",
+      "followUp1": "2026-02-23T15:08:02.823Z",
+      "followUp2": "2026-02-27T16:54:42.592Z"
     },
     "hello@stephgorton.com": {
-      "initial": "2026-02-20T02:58:01.728Z"
+      "initial": "2026-02-20T02:58:01.728Z",
+      "followUp1": "2026-02-23T15:08:02.934Z",
+      "followUp2": "2026-02-27T16:54:42.680Z"
     },
     "hello@melindaemerson.com": {
-      "initial": "2026-02-20T02:58:01.914Z"
+      "initial": "2026-02-20T02:58:01.914Z",
+      "followUp1": "2026-02-23T15:08:03.028Z",
+      "followUp2": "2026-02-27T16:54:42.789Z"
     },
     "hello@jessicajovanovich.com": {
-      "initial": "2026-02-20T02:58:01.998Z"
+      "initial": "2026-02-20T02:58:01.998Z",
+      "followUp1": "2026-02-23T15:08:13.238Z",
+      "followUp2": "2026-02-27T16:54:42.870Z"
     },
     "hello@rubylee.co": {
-      "initial": "2026-02-20T02:58:12.159Z"
+      "initial": "2026-02-20T02:58:12.159Z",
+      "followUp1": "2026-02-23T15:08:13.354Z",
+      "followUp2": "2026-02-27T16:54:53.086Z"
     },
     "hello@amandabucci.com": {
       "initial": "2026-02-20T02:58:12.270Z"
@@ -55,7 +87,357 @@
       "initial": "2026-02-20T02:58:12.350Z"
     },
     "hello@thewanderlover.com": {
-      "initial": "2026-02-20T02:58:12.480Z"
+      "initial": "2026-02-20T02:58:12.480Z",
+      "followUp1": "2026-02-23T15:08:13.450Z",
+      "followUp2": "2026-02-27T16:54:53.208Z"
+    },
+    "hello@stephaniesanzo.com": {
+      "initial": "2026-02-20T15:12:50.929Z"
+    },
+    "hello@kelseywells.com": {
+      "initial": "2026-02-20T15:12:51.034Z"
+    },
+    "hello@alexia-clark.com": {
+      "initial": "2026-02-20T15:12:51.280Z"
+    },
+    "hello@emilyskye.com": {
+      "initial": "2026-02-20T15:12:51.410Z"
+    },
+    "hello@fitwithcoco.com": {
+      "initial": "2026-02-20T15:12:51.505Z"
+    },
+    "hello@hannaoeberg.com": {
+      "initial": "2026-02-20T15:13:01.655Z"
+    },
+    "hello@elevateagency.com": {
+      "initial": "2026-02-20T15:13:01.751Z"
+    },
+    "hello@kaisafit.com": {
+      "initial": "2026-02-20T15:13:01.832Z"
+    },
+    "hello@laurendrain.com": {
+      "initial": "2026-02-20T15:13:01.995Z"
+    },
+    "hello@hourglassworkout.com": {
+      "initial": "2026-02-20T15:13:02.181Z"
+    },
+    "hello@fyndafit.com": {
+      "initial": "2026-02-20T15:13:12.464Z"
+    },
+    "hello@katiecrewe.com": {
+      "initial": "2026-02-20T15:13:12.577Z"
+    },
+    "hello@matchstick.com": {
+      "initial": "2026-02-20T15:13:12.687Z"
+    },
+    "hello@motivatingthemasses.com": {
+      "initial": "2026-02-20T15:13:12.801Z"
+    },
+    "hello@alyssanobriga.com": {
+      "initial": "2026-02-20T15:13:12.895Z"
+    },
+    "hello@flamepublicity.com": {
+      "initial": "2026-02-20T15:13:23.046Z"
+    },
+    "hello@adamjablin.com": {
+      "initial": "2026-02-20T15:13:23.168Z"
+    },
+    "hello@yessupply.co": {
+      "initial": "2026-02-20T15:13:23.263Z"
+    },
+    "hello@thecoachingmasters.com": {
+      "initial": "2026-02-20T15:13:23.413Z"
+    },
+    "hello@hosttalentgroup.com": {
+      "initial": "2026-02-20T15:13:23.506Z"
+    },
+    "hello@thecreativesocial.com": {
+      "initial": "2026-02-23T15:07:41.152Z",
+      "followUp1": "2026-02-26T18:15:20.244Z",
+      "followUp2": "2026-03-02T18:19:45.709Z"
+    },
+    "hello@rebeccaorecoaching.com": {
+      "initial": "2026-02-23T15:08:13.585Z",
+      "followUp1": "2026-02-26T18:15:20.373Z",
+      "followUp2": "2026-03-02T18:19:45.804Z"
+    },
+    "hello@rebeccalynnpope.com": {
+      "initial": "2026-02-23T15:08:13.664Z",
+      "followUp1": "2026-02-26T18:15:20.459Z",
+      "followUp2": "2026-03-02T18:19:45.887Z"
+    },
+    "hello@shellinetko.com": {
+      "initial": "2026-02-24T19:34:57.929Z",
+      "followUp1": "2026-02-28T20:11:18.496Z"
+    },
+    "hello@devineimpact.com": {
+      "initial": "2026-02-24T19:34:58.075Z",
+      "followUp1": "2026-02-28T20:11:18.844Z"
+    },
+    "hello@staceysmithcoaching.com": {
+      "initial": "2026-02-24T19:34:58.151Z",
+      "followUp1": "2026-02-28T20:11:18.942Z"
+    },
+    "hello@identitydepartment.com": {
+      "initial": "2026-02-24T19:34:58.275Z",
+      "followUp1": "2026-02-28T20:11:19.067Z"
+    },
+    "hello@evaredpath.com": {
+      "initial": "2026-02-24T19:34:58.363Z",
+      "followUp1": "2026-02-28T20:11:19.148Z"
+    },
+    "hello@tomassvitorka.com": {
+      "initial": "2026-02-24T19:35:28.393Z",
+      "followUp1": "2026-02-28T20:11:29.325Z"
+    },
+    "hello@handelgroup.com": {
+      "initial": "2026-02-24T19:35:28.536Z",
+      "followUp1": "2026-02-28T20:11:29.460Z"
+    },
+    "hello@valentinamarzola.com": {
+      "initial": "2026-02-24T19:35:28.637Z",
+      "followUp1": "2026-02-28T20:11:29.577Z"
+    },
+    "hello@glennlovelace.com": {
+      "initial": "2026-02-24T19:35:28.730Z",
+      "followUp1": "2026-02-28T20:11:29.685Z"
+    },
+    "hello@richlitvin.com": {
+      "initial": "2026-02-24T19:35:28.839Z",
+      "followUp1": "2026-02-28T20:11:29.761Z"
+    },
+    "hello@ninaaouilk.com": {
+      "initial": "2026-02-24T19:35:39.010Z",
+      "followUp1": "2026-02-28T20:11:39.979Z"
+    },
+    "hello@adviceactually.com": {
+      "initial": "2026-02-24T19:35:39.124Z",
+      "followUp1": "2026-02-28T20:11:40.210Z"
+    },
+    "hello@deanstreetsociety.com": {
+      "initial": "2026-02-24T19:35:39.210Z",
+      "followUp1": "2026-02-28T20:11:40.298Z"
+    },
+    "hello@womenceoproject.com": {
+      "initial": "2026-02-24T19:35:39.314Z",
+      "followUp1": "2026-02-28T20:11:40.678Z"
+    },
+    "hello@harryneedham.com": {
+      "initial": "2026-02-24T19:35:39.397Z",
+      "followUp1": "2026-02-28T20:11:40.795Z"
+    },
+    "hello@harvishah.com": {
+      "initial": "2026-02-24T19:35:49.572Z",
+      "followUp1": "2026-02-28T20:11:51.096Z"
+    },
+    "hello@thecbmindset.com": {
+      "initial": "2026-02-24T19:35:49.695Z",
+      "followUp1": "2026-02-28T20:11:51.250Z"
+    },
+    "hello@suzyschool.com": {
+      "initial": "2026-02-24T19:35:49.783Z",
+      "followUp1": "2026-02-28T20:11:51.385Z"
+    },
+    "hello@meharlabana.com": {
+      "initial": "2026-02-24T19:35:49.903Z",
+      "followUp1": "2026-02-28T20:11:51.663Z"
+    },
+    "hello@alinagrayson.com": {
+      "initial": "2026-02-24T19:35:49.992Z",
+      "followUp1": "2026-02-28T20:11:51.800Z"
+    },
+    "hello@chris-james.co": {
+      "initial": "2026-02-25T15:00:06.771Z",
+      "followUp1": "2026-03-02T03:38:39.366Z"
+    },
+    "hello@annarenderer.com": {
+      "initial": "2026-02-25T15:00:07.849Z",
+      "followUp1": "2026-03-02T03:38:39.479Z"
+    },
+    "hello@naohmsmedia.com": {
+      "initial": "2026-02-25T15:00:07.974Z",
+      "followUp1": "2026-03-02T03:38:39.587Z"
+    },
+    "hello@samanthadaily.com": {
+      "initial": "2026-02-25T15:00:08.098Z",
+      "followUp1": "2026-03-02T03:38:39.710Z"
+    },
+    "hello@sarahairey.co": {
+      "initial": "2026-02-25T15:00:08.238Z",
+      "followUp1": "2026-03-02T03:38:39.797Z"
+    },
+    "hello@bestmeever.net": {
+      "initial": "2026-02-25T15:00:19.795Z",
+      "followUp1": "2026-03-02T03:38:49.945Z"
+    },
+    "hello@samburgess.uk": {
+      "initial": "2026-02-25T15:00:21.077Z",
+      "followUp1": "2026-03-02T03:38:50.039Z"
+    },
+    "hello@michaelneill.org": {
+      "initial": "2026-02-25T15:00:21.257Z",
+      "followUp1": "2026-03-02T03:38:50.136Z"
+    },
+    "hello@davidfrankgomes.com": {
+      "initial": "2026-02-25T15:00:21.388Z",
+      "followUp1": "2026-03-02T03:38:50.249Z"
+    },
+    "hello@morganbullock.com": {
+      "initial": "2026-02-25T15:00:21.511Z",
+      "followUp1": "2026-03-02T03:38:50.354Z"
+    },
+    "hello@pnpcoach.com": {
+      "initial": "2026-02-25T15:00:31.670Z",
+      "followUp1": "2026-03-02T03:39:00.515Z"
+    },
+    "hello@lauraclowdus.com": {
+      "initial": "2026-02-25T15:00:31.761Z",
+      "followUp1": "2026-03-02T03:39:00.603Z"
+    },
+    "hello@mallikarao.com": {
+      "initial": "2026-02-25T15:00:32.049Z",
+      "followUp1": "2026-03-02T03:39:00.674Z"
+    },
+    "hello@charlottelodeyaligned.com": {
+      "initial": "2026-02-25T15:00:32.177Z",
+      "followUp1": "2026-03-02T03:39:00.805Z"
+    },
+    "hello@drkclifecoach.com": {
+      "initial": "2026-02-25T15:00:32.567Z",
+      "followUp1": "2026-03-02T03:39:00.894Z"
+    },
+    "hello@thegreatermeconsulting.com": {
+      "initial": "2026-02-25T15:00:42.730Z",
+      "followUp1": "2026-03-02T03:39:11.066Z"
+    },
+    "hello@morganchantelle.com": {
+      "initial": "2026-02-25T15:00:42.915Z",
+      "followUp1": "2026-03-02T03:39:11.173Z"
+    },
+    "hello@kymshowerslifecoach.com": {
+      "initial": "2026-02-25T15:00:43.027Z",
+      "followUp1": "2026-03-02T03:39:11.251Z"
+    },
+    "hello@happyblackwoman.com": {
+      "initial": "2026-02-25T15:00:43.184Z",
+      "followUp1": "2026-03-02T03:39:11.388Z"
+    },
+    "hello@sandrapossing.com": {
+      "initial": "2026-02-25T15:00:43.281Z",
+      "followUp1": "2026-03-02T03:39:11.461Z"
+    },
+    "hello@camykennedy.com": {
+      "initial": "2026-02-26T18:15:20.648Z",
+      "followUp1": "2026-03-02T15:00:03.418Z"
+    },
+    "hello@yourcourageouslife.co": {
+      "initial": "2026-02-26T18:15:20.756Z",
+      "followUp1": "2026-03-02T15:00:03.630Z"
+    },
+    "hello@rewiremymind.com": {
+      "initial": "2026-02-26T18:15:30.920Z",
+      "followUp1": "2026-03-02T15:00:03.711Z"
+    },
+    "hello@creativesoulcoaching.net": {
+      "initial": "2026-02-26T18:15:31.023Z",
+      "followUp1": "2026-03-02T15:00:03.845Z"
+    },
+    "hello@stefjoanne.com": {
+      "initial": "2026-02-26T18:15:31.109Z",
+      "followUp1": "2026-03-02T15:00:03.958Z"
+    },
+    "hello@thisisco.com": {
+      "initial": "2026-02-26T18:15:31.275Z",
+      "followUp1": "2026-03-02T15:00:14.116Z"
+    },
+    "hello@theonlinebusinesscoach.com": {
+      "initial": "2026-02-26T18:15:31.400Z",
+      "followUp1": "2026-03-02T15:00:15.169Z"
+    },
+    "hello@allenswan.com": {
+      "initial": "2026-02-26T18:15:41.614Z",
+      "followUp1": "2026-03-02T15:00:15.265Z"
+    },
+    "hello@kristinapadgett.com": {
+      "initial": "2026-02-26T18:15:41.777Z",
+      "followUp1": "2026-03-02T15:00:16.024Z"
+    },
+    "hello@karinafdaves.com": {
+      "initial": "2026-02-26T18:15:41.864Z",
+      "followUp1": "2026-03-02T15:00:16.126Z"
+    },
+    "hello@yasminecheyenne.com": {
+      "initial": "2026-02-26T18:15:42.102Z",
+      "followUp1": "2026-03-02T15:00:26.265Z"
+    },
+    "hello@amymewborn.com": {
+      "initial": "2026-02-26T18:15:42.213Z",
+      "followUp1": "2026-03-02T15:00:26.377Z"
+    },
+    "hello@kateperkovic.com": {
+      "initial": "2026-02-26T18:15:52.445Z",
+      "followUp1": "2026-03-02T15:00:26.460Z"
+    },
+    "hello@fakhitahiqbal.com": {
+      "initial": "2026-02-26T18:15:52.602Z",
+      "followUp1": "2026-03-02T15:00:26.584Z"
+    },
+    "hello@indiabutlerco.com": {
+      "initial": "2026-02-26T18:15:52.761Z",
+      "followUp1": "2026-03-02T15:00:26.677Z"
+    },
+    "hello@lisabean.co.uk": {
+      "initial": "2026-02-26T18:15:53.080Z",
+      "followUp1": "2026-03-02T15:00:36.849Z"
+    },
+    "hello@kristyrobinson.com": {
+      "initial": "2026-02-26T18:15:53.228Z",
+      "followUp1": "2026-03-02T15:00:36.963Z"
+    },
+    "hello@anniemhenderson.com": {
+      "initial": "2026-02-27T16:54:53.302Z",
+      "followUp1": "2026-03-02T18:19:46.022Z"
+    },
+    "hello@elizabethlevitin.com": {
+      "initial": "2026-02-27T16:54:53.430Z",
+      "followUp1": "2026-03-02T18:19:46.118Z"
+    },
+    "hello@daniellepreiser.com": {
+      "initial": "2026-02-27T16:54:53.606Z",
+      "followUp1": "2026-03-02T18:19:56.288Z"
+    },
+    "hello@sheenashah.com": {
+      "initial": "2026-03-02T15:00:37.058Z"
+    },
+    "hello@bbwellness.com": {
+      "initial": "2026-03-02T15:00:37.188Z"
+    },
+    "hello@thewellnesswarrior.com": {
+      "initial": "2026-03-02T15:00:37.307Z"
+    },
+    "hello@jenisecheyenne.com": {
+      "initial": "2026-03-02T18:19:56.483Z"
+    },
+    "hello@kelseylong.com": {
+      "initial": "2026-03-02T18:19:56.570Z"
+    },
+    "hello@cheflogant.com": {
+      "initial": "2026-03-02T18:19:57.029Z"
+    },
+    "hello@thisisesm.com": {
+      "initial": "2026-03-02T18:19:57.108Z"
+    },
+    "hello@dequiantebrown.com": {
+      "initial": "2026-03-02T18:20:07.252Z"
+    },
+    "hello@dorinmarina.com": {
+      "initial": "2026-03-02T18:20:07.389Z"
+    },
+    "hello@lacruztennis.com": {
+      "initial": "2026-03-02T18:20:07.467Z"
+    },
+    "hello@joyskincare.com": {
+      "initial": "2026-03-02T18:20:07.610Z"
     }
   },
   "stats": {

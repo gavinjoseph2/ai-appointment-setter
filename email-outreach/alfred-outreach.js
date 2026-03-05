@@ -10,69 +10,123 @@ const path = require('path');
 
 // Config
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const FROM_EMAIL = 'gavin@lead-setter.com';
-const FROM_NAME = 'Gavin from LeadSetter';
+const FROM_EMAIL = 'alfred@lead-setter.com';
+const FROM_NAME = 'Gavin | LeadSetter';
 const GAVIN_EMAIL = 'gavinjoseph2@gmail.com';
 const DAILY_LIMIT = 20; // Max emails per run
 const FOLLOWUP_1_DAYS = 3;
 const FOLLOWUP_2_DAYS = 7;
 
+// Pain point map by niche keyword
+function getPainPoint(niche) {
+  const n = (niche || '').toLowerCase();
+
+  if (n.includes('sales') || n.includes('premium client') || n.includes('business scal') || n.includes('business coach')) {
+    return {
+      pain: `You're probably hopping on discovery calls that go nowhere — or worse, losing people who were ready but never heard back fast enough.`,
+      solution: `What I built qualifies leads before they ever reach you, so the only calls you're taking are with people who are already serious.`
+    };
+  }
+  if (n.includes('life coach') || n.includes('mindset') || n.includes('trauma') || n.includes('healer') || n.includes('wellness') || n.includes('anxiety')) {
+    return {
+      pain: `People in your space take time to commit — they lurk, they follow, they feel the pull, but they need a nudge before they actually book. Most coaches lose them in that window.`,
+      solution: `What I built follows up with those people automatically — in a way that feels personal, not spammy — and gets them to take the next step when they're ready.`
+    };
+  }
+  if (n.includes('ig growth') || n.includes('instagram') || n.includes('content') || n.includes('social')) {
+    return {
+      pain: `You probably help clients grow their audience — but leads coming from your own content likely aren't converting at the rate they could be.`,
+      solution: `I built something that catches the people who engage with your content, follows up automatically, and books them before they lose momentum.`
+    };
+  }
+  if (n.includes('health') || n.includes('fitness') || n.includes('diet') || n.includes('nutrition') || n.includes('autoimmune')) {
+    return {
+      pain: `People follow you because they want to change their health. But wanting to change and actually booking are two different things — and most of them just need a nudge they never get.`,
+      solution: `What I built sends that nudge automatically — follows up, qualifies them, and books the ones who are serious.`
+    };
+  }
+  if (n.includes('online business') || n.includes('online expert') || n.includes('course') || n.includes('digital product') || n.includes('launch')) {
+    return {
+      pain: `The gap between someone clicking your link and actually booking a call is where most of the revenue leaks. Most people need 2-3 follow-ups before they commit — and nobody has time to send those manually.`,
+      solution: `I built a tool that closes that gap automatically. It follows up, qualifies, and books — without you lifting a finger.`
+    };
+  }
+  if (n.includes('relationship') || n.includes('marriage') || n.includes('dating')) {
+    return {
+      pain: `People in your niche are dealing with real emotional stuff — they don't book right away. They think about it, put it off, and eventually move on. You lose them not because they weren't interested, but because no one followed up.`,
+      solution: `What I built reaches back out to those people automatically, meets them where they are, and books the call when they're finally ready.`
+    };
+  }
+  if (n.includes('performance') || n.includes('executive') || n.includes('high-achiev') || n.includes('leadership')) {
+    return {
+      pain: `High-achievers are busy. They see your stuff, they mean to reach out, and then something else pulls their attention. Most of them would've booked — they just needed a timely follow-up.`,
+      solution: `What I built handles that follow-up automatically, so you're capturing the leads that would've otherwise slipped through.`
+    };
+  }
+
+  // Default fallback
+  return {
+    pain: `Most coaches I talk to are great at attracting interest — the problem is converting that interest into booked calls. People show up, click around, and then disappear before taking the next step.`,
+    solution: `What I built closes that gap. It follows up with those leads automatically, figures out who's serious, and gets them booked without you chasing anyone.`
+  };
+}
+
 // Email templates
 const templates = {
-  initial: (name, niche) => ({
-    subject: `Quick question about ${niche || 'your coaching business'}`,
-    html: `
-      <p>Hey ${name},</p>
-      
-      <p>I came across your Instagram and really liked what you're doing with ${niche || 'coaching'}.</p>
-      
-      <p>Quick question - how are you currently handling lead qualification and booking calls?</p>
-      
-      <p>We built an AI appointment setter that qualifies leads 24/7 and books them directly into your calendar. It's already working for coaches in your space.</p>
-      
-      <p>📹 <a href="https://www.loom.com/share/86489f9c9db04641baa4c12c02a1b944">Watch the 2-min demo</a> | 💬 <a href="https://lead-setter.com">Try it live</a></p>
-      
-      <p>Would love to set you up with a free trial if you're interested. No strings attached - just looking for feedback from coaches doing great work.</p>
-      
-      <p>Best,<br>Gavin<br>LeadSetter</p>
-      
-      <p><strong>Reply to this email or reach me at:</strong> gavinjoseph2@gmail.com</p>
-    `
-  }),
-  
-  followUp1: (name) => ({
-    subject: `Re: Quick question`,
-    html: `
-      <p>Hey ${name},</p>
-      
-      <p>Just following up on my last email about the AI appointment setter.</p>
-      
-      <p>I know you're busy, so here's the short version: It qualifies leads and books calls automatically. Free to try, takes 5 min to set up.</p>
-      
-      <p>Worth a quick look? 📹 <a href="https://www.loom.com/share/86489f9c9db04641baa4c12c02a1b944">2-min video</a> | 💬 <a href="https://lead-setter.com">Try it live</a></p>
-      
-      <p>Gavin</p>
-      
-      <p><strong>Reply or email me:</strong> gavinjoseph2@gmail.com</p>
-    `
-  }),
-  
+  initial: (name, niche, notes, instagram) => {
+    const { pain, solution } = getPainPoint(niche);
+    return {
+      subject: `had a question`,
+      html: `
+        <p>Hey ${name},</p>
+
+        <p>${pain}</p>
+
+        <p>${solution}</p>
+
+        <p>Made a quick 2-min video if you want to see exactly how it works: <a href="https://www.loom.com/share/86489f9c9db04641baa4c12c02a1b944">loom.com/share/86489f9c</a></p>
+
+        <p>Either way, keep doing what you're doing.</p>
+
+        <p>Gavin</p>
+      `
+    };
+  },
+
+  followUp1: (name, niche) => {
+    const { pain } = getPainPoint(niche);
+    return {
+      subject: `re: had a question`,
+      html: `
+        <p>Hey ${name},</p>
+
+        <p>Wanted to follow up on my last email — I'll be more direct this time.</p>
+
+        <p>${pain}</p>
+
+        <p>I work with coaches specifically on this problem. Not traffic, not content — just fixing the leak between "interested" and "booked."</p>
+
+        <p>If it's relevant, happy to do a quick 15-min screen share. No pitch, just showing you what it looks like in practice.</p>
+
+        <p>Gavin</p>
+      `
+    };
+  },
+
   followUp2: (name) => ({
-    subject: `Last one from me`,
+    subject: `last one, promise`,
     html: `
       <p>Hey ${name},</p>
-      
-      <p>Last email from me - don't want to be annoying!</p>
-      
-      <p>If timing isn't right, totally get it. But if you're ever curious about automating lead qualification, the offer stands.</p>
-      
-      <p>📹 <a href="https://www.loom.com/share/86489f9c9db04641baa4c12c02a1b944">Watch demo</a> | 💬 <a href="https://lead-setter.com">Try it</a></p>
-      
-      <p>Wishing you success 🙏</p>
-      
-      <p>Gavin<br>LeadSetter</p>
-      
-      <p><strong>Email me:</strong> gavinjoseph2@gmail.com</p>
+
+      <p>Not going to keep showing up in your inbox after this.</p>
+
+      <p>If the timing's off or it's just not relevant, totally fair. But if you ever find yourself thinking "I know I'm losing leads somewhere" — that's exactly what I help with.</p>
+
+      <p>Demo's here whenever: <a href="https://www.loom.com/share/86489f9c9db04641baa4c12c02a1b944">loom.com/share/86489f9c</a></p>
+
+      <p>Hope things are going well.</p>
+
+      <p>Gavin</p>
     `
   })
 };
@@ -115,7 +169,7 @@ async function sendEmail(resend, to, template, type) {
   try {
     const result = await resend.emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      reply_to: GAVIN_EMAIL,
+      reply_to: FROM_EMAIL,
       to: [to],
       subject: template.subject,
       html: template.html
@@ -144,7 +198,7 @@ async function notifyGavin(resend, summary) {
         <li>Follow-up 2 sent: ${summary.followUp2}</li>
         <li>Skipped (already done): ${summary.skipped}</li>
       </ul>
-      <p><em>Check Resend dashboard for delivery status. Replies go to gavinjoseph2@gmail.com</em></p>
+      <p><em>Check Resend dashboard for delivery status. Replies to alfred@lead-setter.com forward to your Gmail.</em></p>
     `
   });
 }
@@ -184,7 +238,7 @@ async function main() {
     // Determine what to send
     if (!record.initial) {
       // Send initial email
-      const template = templates.initial(prospect.name, prospect.niche);
+      const template = templates.initial(prospect.name, prospect.niche, prospect.notes, prospect.instagram);
       const result = await sendEmail(resend, email, template, 'INITIAL');
       if (result.success) {
         tracking.prospects[email] = { ...record, initial: new Date().toISOString() };
@@ -193,7 +247,7 @@ async function main() {
       }
     } else if (!record.followUp1 && daysSince(record.initial) >= FOLLOWUP_1_DAYS) {
       // Send follow-up 1
-      const template = templates.followUp1(prospect.name);
+      const template = templates.followUp1(prospect.name, prospect.niche);
       const result = await sendEmail(resend, email, template, 'FOLLOW-UP 1');
       if (result.success) {
         tracking.prospects[email] = { ...record, followUp1: new Date().toISOString() };

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .cover {
+      width: 1280px;
+      height: 720px;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 80px;
+    }
+    .content {
+      width: 100%;
+    }
+    .emoji {
+      font-size: 72px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      color: #ffffff;
+      font-size: 64px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      line-height: 1.1;
+    }
+    .tagline {
+      color: #94a3b8;
+      font-size: 32px;
+      margin-bottom: 50px;
+    }
+    .features {
+      display: flex;
+      gap: 24px;
+    }
+    .feature {
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 20px 28px;
+      color: #22d3ee;
+      font-size: 20px;
+      font-weight: 600;
+    }
+    
+    /* Thumbnail version */
+    .thumbnail {
+      width: 600px;
+      height: 600px;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      text-align: center;
+    }
+    .thumbnail .emoji {
+      font-size: 80px;
+      margin-bottom: 30px;
+    }
+    .thumbnail h1 {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+    .thumbnail .tagline {
+      font-size: 24px;
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+<body>
+  <h2 style="padding: 20px; background: #333; color: white;">COVER IMAGE (1280x720) - Right-click > Save image as...</h2>
+  <div class="cover">
+    <div class="content">
+      <div class="emoji">🤖</div>
+      <h1>Appointment Setter Bot</h1>
+      <p class="tagline">Book more calls. Automatically.</p>
+      <div class="features">
+        <div class="feature">⚡ 30-min Setup</div>
+        <div class="feature">📅 24/7 Booking</div>
+        <div class="feature">🔥 No Code</div>
+      </div>
+    </div>
+  </div>
+  
+  <h2 style="padding: 20px; background: #333; color: white; margin-top: 40px;">THUMBNAIL (600x600) - Right-click > Save image as...</h2>
+  <div class="thumbnail">
+    <div class="emoji">🤖</div>
+    <h1>Appointment Setter Bot</h1>
+    <p class="tagline">Book calls 24/7</p>
+  </div>
+</body>
+</html>

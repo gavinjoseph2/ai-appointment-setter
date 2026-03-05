@@ -81,29 +81,43 @@ async function initCalendly() {
 // System prompt for the appointment setter
 const SYSTEM_PROMPT = `You are ${process.env.ASSISTANT_NAME || 'Alex'}, a friendly and professional appointment scheduling assistant for ${process.env.BUSINESS_NAME || 'our coaching practice'}.
 
-Your goal is to help visitors book a free consultation call as quickly and smoothly as possible.
+Your goal is to help visitors book a free neuropathy strategy consultation call. First collect 4 quick intake questions, then book them in.
 
-CONVERSATION FLOW (KEEP IT FAST):
-1. GREET + OFFER BOOKING: "Hey! Want to book a free consultation? I have [3 times]. Which works? Just drop your name and email too!"
-2. If they share what they're looking for first, acknowledge briefly then offer times
-3. BOOK immediately once you have time + name + email
+LANGUAGE RULE (VERY IMPORTANT):
+- Your FIRST message must ask: "Do you speak Spanish? (Yes/No)" — always in English first.
+- If user says YES to Spanish: switch entirely to Spanish for the rest of the conversation and never switch back to English.
+- If user says NO: continue in English for the entire conversation.
+
+CONVERSATION FLOW:
+1. INTAKE (ask ALL 4 questions, one at a time or grouped):
+   Q1: "Do you speak Spanish? (Yes/No)" [if Yes → switch to Spanish from Q2 onward]
+   Q2: "Have you been diagnosed with neuropathy before? (Yes/No)"
+   Q3: "Have you found a solution to help your neuropathy? (Yes/No)"
+   Q4: "On a scale of 1-5, how motivated are you to find a solution for your neuropathy?"
+
+2. After all 4 answers collected → get availability and offer 3-4 times
+3. Ask for name + email in the SAME message as the time options
+4. Book immediately once you have time + name + email
 
 RULES:
-- Keep responses SHORT (1-2 sentences)
-- MINIMIZE FRICTION - don't ask unnecessary questions
-- Only ask ONE qualifying question max, and make it optional
-- Get time + name + email in ONE exchange if possible
-- Show only 3-4 time options, not a full list
-- Be warm but efficient
+- Keep responses SHORT (1-2 sentences max)
+- Ask Q2-Q4 grouped together to save time: "Quick questions before we book: [Q2] / [Q3] / [Q4]"
+- Be warm and conversational
+- Show only 3-4 time options
+- Include all 4 intake answers in the leadSummary when calling book_appointment
 
 BOOKING FLOW:
-1. Use get_availability (shows only top 3-4 slots)
-2. Present times AND ask for name/email in the SAME message: "I have Monday 2pm, Tuesday 11am, or Wednesday 3pm. Which works? Just need your name and email to lock it in!"
-3. User responds with time + info → immediately call book_appointment
+1. Use get_availability (shows top 3-4 slots)
+2. Present times AND ask for name/email in the SAME message
+3. User responds → immediately call book_appointment
 4. Done! Give them the confirmation link
 
 EXAMPLE CONVERSATION:
-Bot: "Hey! 👋 Want to book a free consultation with Coach? I have Monday 2pm, Tuesday 11am, or Wednesday 3pm open. Which works best? Just drop your name and email and I'll lock it in!"
+Bot: "Do you speak Spanish? (Yes/No)"
+User: "No"
+Bot: "Quick questions before we book your free consultation: Have you been diagnosed with neuropathy before? / Have you found a solution yet? / On a scale of 1-5, how motivated are you to find one?"
+User: "Yes / No / 5"
+Bot: "Great! I have Monday 2pm, Tuesday 11am, or Wednesday 3pm open. Which works? Just drop your name and email and I'll lock it in!"
 User: "Tuesday 11am works. I'm John Smith, john@email.com"
 Bot: [calls book_appointment] "Perfect! You're all set for Tuesday at 11am. Just confirm here: [link]. See you then! 🎉"
 
@@ -114,17 +128,36 @@ Available times: Monday-Friday, 11am-5pm EST.`;
 // Calendly API functions
 async function getCalendlyAvailability() {
   if (!process.env.CALENDLY_API_KEY || !cachedEventTypeUri) {
-    // Return mock data if Calendly not configured
-    cachedAvailableSlots = [
-      { time: "Monday 11:00 AM", iso: "2026-02-23T11:00:00-05:00" },
-      { time: "Monday 2:00 PM", iso: "2026-02-23T14:00:00-05:00" },
-      { time: "Tuesday 11:00 AM", iso: "2026-02-24T11:00:00-05:00" },
-      { time: "Wednesday 3:00 PM", iso: "2026-02-25T15:00:00-05:00" }
-    ];
+    // Return mock data if Calendly not configured — use dynamic near-future dates
+    const bookingUrl = cachedSchedulingUrl || process.env.CALENDLY_SCHEDULING_URL || 'https://calendly.com/gavinjoseph2/30min';
+    const now = new Date();
+    // Find next Mon/Tue/Wed/Thu
+    const slots = [];
+    const targetDays = [1, 2, 3, 4]; // Mon-Thu
+    let d = new Date(now);
+    d.setDate(d.getDate() + 1);
+    while (slots.length < 4) {
+      if (targetDays.includes(d.getDay())) {
+        const hours = slots.length % 2 === 0 ? 11 : 14;
+        const iso = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hours, 0, 0).toISOString();
+        const dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
+        const timeStr = hours === 11 ? '11:00 AM' : '2:00 PM';
+        slots.push({
+          time: `${dayName} ${timeStr}`,
+          shortTime: `${dayName} ${timeStr}`,
+          iso,
+          scheduling_url: bookingUrl
+        });
+      }
+      d.setDate(d.getDate() + 1);
+    }
+    cachedAvailableSlots = slots;
+    const topSlots = slots.slice(0, 3).map(s => s.shortTime);
     return {
       available: true,
+      topSlots,
       slots: cachedAvailableSlots.map(s => s.time),
-      message: "Available times: Monday 11am or 2pm, Tuesday 11am, Wednesday 3pm"
+      message: `I have ${topSlots.join(', ')} open. Which works? Just drop your name and email and I'll lock it in!`
     };
   }
 
@@ -289,7 +322,14 @@ async function bookAppointment(name, email, preferredTime, leadSummary) {
             <p><strong>Email:</strong> ${cleanEmail}</p>
             <p><strong>Requested Time:</strong> ${matchedSlot.time}</p>
           </div>
-          <h3 style="color: #1f2937;">Lead Summary:</h3>
+          <h3 style="color: #1f2937;">Intake Answers:</h3>
+          <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border-left: 4px solid #2563eb; margin-bottom: 16px;">
+            <p style="margin: 6px 0;"><strong>🌐 Speaks Spanish:</strong> ${leadSummary?.includes('Spanish: Yes') ? '✅ Yes' : '❌ No'}</p>
+            <p style="margin: 6px 0;"><strong>🏥 Previously Diagnosed:</strong> ${leadSummary?.includes('Diagnosed: Yes') ? '✅ Yes' : '❌ No'}</p>
+            <p style="margin: 6px 0;"><strong>💊 Found a Solution:</strong> ${leadSummary?.includes('Solution Found: Yes') ? '✅ Yes' : '❌ No'}</p>
+            <p style="margin: 6px 0;"><strong>🔥 Motivation (1-5):</strong> ${(leadSummary?.match(/Motivation: (\d)/) || [])[1] || 'N/A'}</p>
+          </div>
+          <h3 style="color: #1f2937;">Full Summary:</h3>
           <div style="background: #fef3c7; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b;">
             <p style="margin: 0; white-space: pre-wrap;">${leadSummary || 'No summary provided'}</p>
           </div>

@@ -1,0 +1,17 @@
+{
+  "hello@myanichol.com": {
+    "status": "pending",
+    "notes": "Helps online educators scale past $5k",
+    "updatedAt": "2026-02-20T03:47:43.649Z"
+  },
+  "hello@dietitiandeanna.com": {
+    "status": "pending",
+    "notes": "CEO of Online Entrepreneur Academy",
+    "updatedAt": "2026-02-20T03:47:42.552Z"
+  },
+  "contact@gmail.com": {
+    "status": "pending",
+    "notes": "Founder of Pure AI Studio - perfect fit",
+    "updatedAt": "2026-02-20T03:47:55.634Z"
+  }
+}
