@@ -226,7 +226,7 @@ async function getCalendlyAvailability() {
       return { 
         available: true, 
         topSlots: bestSlots,
-        message: `I have ${bestSlots.join(', ')} open. Which works? Just drop your name and email and I'll lock it in!`
+        message: `Great! I have Monday-Friday, 10am-5pm availability. Which time works best for you? Just drop your name and email and I'll lock it in!`
       };
     }
     console.log('Calendly response:', JSON.stringify(data));
