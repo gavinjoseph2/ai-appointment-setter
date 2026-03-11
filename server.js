@@ -102,8 +102,8 @@ CONVERSATION FLOW:
    Q4: "On a scale of 1-5, how motivated are you to find a solution for your neuropathy?"
 
 2. After all 4 answers collected → get availability and offer 3-4 times
-3. Ask for name + email in the SAME message as the time options
-4. Book immediately once you have time + name + email
+3. Ask for name, phone number, and email in the SAME message as the time options
+4. Book immediately once you have time + name + phone + email
 
 RULES:
 - Keep responses SHORT (1-2 sentences max)
@@ -128,10 +128,9 @@ Bot: "Have you found a solution to help your neuropathy? (Yes/No)"
 User: "No"
 Bot: "On a scale of 1-5, how motivated are you to find a solution for your neuropathy?"
 User: "5"
-Bot: [calls get_availability] "Great! I have Monday 11am, Tuesday 2pm, or Wednesday 11am open. Which works best? Just need your name and email to lock it in!"
-Bot: "Great! I have Monday 2pm, Tuesday 11am, or Wednesday 3pm open. Which works? Just drop your name and email and I'll lock it in!"
-User: "Tuesday 11am works. I'm John Smith, john@email.com"
-Bot: [calls book_appointment] "Perfect! You're all set for Tuesday at 11am. Just confirm here: [link]. See you then! 🎉"
+Bot: [calls get_availability] "Great! FREE 15-minute phone consultation — I have Wednesday 10am, Thursday 12pm, or Friday 2pm available. Which works best for you? Just need your name, phone number, and email to lock it in!"
+User: "Wednesday 10am works. I'm John Smith, 555-123-4567, john@email.com"
+Bot: [calls book_appointment] "Perfect! You're all set for Wednesday at 10am. Just confirm here: [link]. See you then! 🎉"
 
 That's it - 2 messages to book. No lengthy qualification. Get them booked!
 
@@ -284,9 +283,10 @@ function findMatchingSlot(preferredTime) {
   return null;
 }
 
-async function bookAppointment(name, email, preferredTime, leadSummary, speaksSpanish, diagnosedBefore, foundSolution, motivationScore) {
+async function bookAppointment(name, email, phone, preferredTime, leadSummary, speaksSpanish, diagnosedBefore, foundSolution, motivationScore) {
   const cleanName = name ? name.replace(/\*+/g, '').trim() : '';
   const cleanEmail = email ? email.replace(/\*+/g, '').trim() : '';
+  const cleanPhone = phone ? phone.replace(/\*+/g, '').trim() : '';
   
   // Find matching slot
   const matchedSlot = findMatchingSlot(preferredTime);
@@ -334,6 +334,7 @@ async function bookAppointment(name, email, preferredTime, leadSummary, speaksSp
           <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <p><strong>Name:</strong> ${cleanName}</p>
             <p><strong>Email:</strong> ${cleanEmail}</p>
+            <p><strong>Phone:</strong> ${cleanPhone || 'Not provided'}</p>
             <p><strong>Requested Time:</strong> ${matchedSlot.time}</p>
           </div>
           <h3 style="color: #1f2937;">Intake Answers:</h3>
@@ -401,14 +402,15 @@ const tools = [
       properties: {
         name: { type: "string", description: "Client's full name" },
         email: { type: "string", description: "Client's email address" },
-        preferredTime: { type: "string", description: "The time the client requested, e.g. 'Tuesday at 2pm' or 'Wednesday afternoon'" },
+        phone: { type: "string", description: "Client's phone number" },
+        preferredTime: { type: "string", description: "The time the client requested, e.g. 'Wednesday at 10am' or 'Thursday afternoon'" },
         leadSummary: { type: "string", description: "Brief summary of the lead: their goal, challenges, and any relevant context from the conversation" },
         speaksSpanish: { type: "string", description: "Does the patient speak Spanish? 'Yes' or 'No'" },
         diagnosedBefore: { type: "string", description: "Has the patient been diagnosed with neuropathy before? 'Yes' or 'No'" },
         foundSolution: { type: "string", description: "Has the patient found a solution to their neuropathy? 'Yes' or 'No'" },
         motivationScore: { type: "string", description: "Patient's motivation score from 1-5 to find a solution" }
       },
-      required: ["name", "email", "preferredTime", "leadSummary", "speaksSpanish", "diagnosedBefore", "foundSolution", "motivationScore"]
+      required: ["name", "email", "phone", "preferredTime", "leadSummary", "speaksSpanish", "diagnosedBefore", "foundSolution", "motivationScore"]
     }
   }
 ];
@@ -427,6 +429,7 @@ async function handleToolCall(toolName, toolInput) {
     const result = await bookAppointment(
       toolInput.name,
       toolInput.email,
+      toolInput.phone,
       toolInput.preferredTime,
       toolInput.leadSummary,
       toolInput.speaksSpanish,
